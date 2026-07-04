@@ -12,6 +12,8 @@ export interface LLMProvider {
   }>;
 }
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 2, timeoutMs = 15000): Promise<T> => {
   let attempt = 0;
   while (attempt <= maxRetries) {
@@ -22,10 +24,21 @@ const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 2, timeoutMs = 15
       return await Promise.race([fn(), timeoutPromise]);
     } catch (error: any) {
       attempt++;
-      console.warn(`[LLM Service] Attempt ${attempt} failed: ${error.message}. Retrying...`);
+
+      const errorMessage = error.message || String(error);
+      const isRateLimit = error.status === 429 || errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('Quota');
+
       if (attempt > maxRetries) {
         console.error(`[LLM Service] All ${maxRetries + 1} attempts failed.`);
         throw error;
+      }
+
+      if (isRateLimit) {
+        console.warn(`\n[LLM Service] Rate limit exceeded (429). Waiting 40 seconds before attempt ${attempt + 1}...`);
+        await delay(40000); // Wait 40s to clear the quota window
+      } else {
+        console.warn(`\n[LLM Service] Attempt ${attempt} failed: ${errorMessage}. Retrying in 2 seconds...`);
+        await delay(2000);
       }
     }
   }
