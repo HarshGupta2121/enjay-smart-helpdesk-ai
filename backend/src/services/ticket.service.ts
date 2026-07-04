@@ -5,6 +5,31 @@ import { BadRequestError, NotFoundError } from '../utils/errors';
 import { Prisma, TicketStatus, TicketPriority } from '@prisma/client';
 
 export class TicketService {
+  async getTickets(filters: {
+    status?: string;
+    priority?: string;
+    category?: string;
+    assigneeId?: string;
+    requesterId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+    
+    return ticketRepository.findTickets({
+      status: filters.status,
+      priority: filters.priority,
+      category: filters.category,
+      assigneeId: filters.assigneeId,
+      requesterId: filters.requesterId,
+      searchTerm: filters.search,
+      page,
+      limit
+    });
+  }
+
   /**
    * 1. createTicket
    * Creates a new ticket, logs the genesis activity, and immediately hands it off

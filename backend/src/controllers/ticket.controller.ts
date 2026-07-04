@@ -5,6 +5,32 @@ import { StatusCodes } from 'http-status-codes';
 import { TicketStatus } from '@prisma/client';
 
 export class TicketController {
+  public getTickets = async (req: Request, res: Response) => {
+    const { 
+      page, 
+      limit, 
+      search, 
+      status, 
+      priority, 
+      category, 
+      assigneeId, 
+      requesterId 
+    } = req.query;
+
+    const data = await ticketService.getTickets({
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 20,
+      search: search as string,
+      status: status as string,
+      priority: priority as string,
+      category: category as string,
+      assigneeId: assigneeId as string,
+      requesterId: requesterId as string
+    });
+
+    return sendSuccess(res, StatusCodes.OK, 'Tickets fetched successfully', data);
+  };
+
 
   public createTicket = async (req: Request, res: Response) => {
     const requesterId = req.user!.userId;

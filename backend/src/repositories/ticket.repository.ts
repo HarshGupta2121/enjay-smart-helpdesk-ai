@@ -97,16 +97,22 @@ export class TicketRepository {
   }
 
   async findTickets(filters: {
-    status?: TicketStatus;
+    status?: string;
+    priority?: string;
+    category?: string;
     assigneeId?: string;
     requesterId?: string;
     searchTerm?: string;
+    page: number;
+    limit: number;
   }) {
     const whereClause: Prisma.TicketWhereInput = {
       deletedAt: null,
     };
 
-    if (filters.status) whereClause.status = filters.status;
+    if (filters.status) whereClause.status = filters.status as any;
+    if (filters.priority) whereClause.priority = filters.priority as any;
+    if (filters.category) whereClause.category = filters.category as any;
     if (filters.assigneeId) whereClause.assigneeId = filters.assigneeId;
     if (filters.requesterId) whereClause.requesterId = filters.requesterId;
 
@@ -117,14 +123,30 @@ export class TicketRepository {
       ];
     }
 
-    return prisma.ticket.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        requester: { select: { id: true, fullName: true, avatar: true } },
-        assignee: { select: { id: true, fullName: true, avatar: true } },
-      },
-    });
+    const skip = (filters.page - 1) * filters.limit;
+
+    const [tickets, total] = await Promise.all([
+      prisma.ticket.findMany({
+        where: whereClause,
+        skip,
+        take: filters.limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          requester: { select: { id: true, fullName: true, avatar: true } },
+          assignee: { select: { id: true, fullName: true, avatar: true } },
+        },
+      }),
+      prisma.ticket.count({ where: whereClause })
+    ]);
+
+    return { 
+      tickets, 
+      meta: { 
+        total, 
+        page: filters.page, 
+        totalPages: Math.ceil(total / filters.limit) 
+      } 
+    };
   }
 
   // ==========================================

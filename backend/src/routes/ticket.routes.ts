@@ -9,7 +9,7 @@ import {
   createTicketSchema,
   updateStatusSchema,
   addCommentSchema,
-  // searchFilterSchema // (For future GET / endpoints)
+  searchFilterSchema
 } from '../validators/ticket.validator';
 
 const router = Router();
@@ -56,9 +56,25 @@ router.post(
   asyncHandler(ticketController.createTicket)
 );
 
+
+/**
+ * @swagger
+ * /api/tickets:
+ *   get:
+ *     summary: Fetch a list of tickets with pagination and filtering
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get(
+  '/',
+  validate(searchFilterSchema),
+  asyncHandler(ticketController.getTickets)
+);
+
 /**
  * @swagger
  * /api/tickets/{id}:
+
  *   get:
  *     summary: Fetch a ticket with its unified timeline
  *     security:
