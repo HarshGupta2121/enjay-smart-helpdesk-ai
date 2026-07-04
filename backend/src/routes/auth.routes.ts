@@ -4,7 +4,7 @@ import authController from '../controllers/auth.controller';
 import { validate } from '../middlewares/validate.middleware';
 import { authenticate, requireRole } from '../middlewares/auth.middleware';
 import { asyncHandler } from '../utils/asyncHandler';
-import { loginSchema, registerSchema, refreshTokenSchema } from '../validators/auth.validator';
+import { loginSchema, registerSchema, refreshTokenSchema, updateProfileSchema, changePasswordSchema } from '../validators/auth.validator';
 
 const router = Router();
 
@@ -35,5 +35,26 @@ router.get(
     res.json({ message: 'Welcome Admin' });
   })
 );
+
+
+/**
+ * @swagger
+ * /api/auth/profile:
+ *   patch:
+ *     summary: Update current user profile
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch('/profile', authenticate, validate(updateProfileSchema), asyncHandler(authController.updateProfile));
+
+/**
+ * @swagger
+ * /api/auth/password:
+ *   patch:
+ *     summary: Change current user password
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch('/password', authenticate, validate(changePasswordSchema), asyncHandler(authController.changePassword));
 
 export default router;

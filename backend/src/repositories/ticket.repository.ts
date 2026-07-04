@@ -105,7 +105,7 @@ export class TicketRepository {
     searchTerm?: string;
     page: number;
     limit: number;
-  }) {
+  }, enforcedWhere?: Prisma.TicketWhereInput) {
     const whereClause: Prisma.TicketWhereInput = {
       deletedAt: null,
     };
@@ -123,11 +123,16 @@ export class TicketRepository {
       ];
     }
 
+    
+    const finalWhere: Prisma.TicketWhereInput = enforcedWhere 
+      ? { AND: [whereClause, enforcedWhere] } 
+      : whereClause;
+
     const skip = (filters.page - 1) * filters.limit;
 
     const [tickets, total] = await Promise.all([
       prisma.ticket.findMany({
-        where: whereClause,
+        where: finalWhere,
         skip,
         take: filters.limit,
         orderBy: { createdAt: 'desc' },

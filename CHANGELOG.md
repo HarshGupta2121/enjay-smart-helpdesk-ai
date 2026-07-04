@@ -5,6 +5,14 @@ All notable changes to the Enjay Smart HelpDesk AI project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-07-04 (RBAC & Profile Management Sprint)
+
+### Added
+- **Deep Ticket RBAC**: Refactored `TicketService.getTickets` to deeply inject role-based data visibility constraints. Customers strictly view only requested tickets. Engineers view requested and assigned tickets. Managers view tickets across their managed teams. Admins retain global visibility.
+- **My Tickets Compatibility**: Updated backend logic using OR condition arrays to allow frontend overrides (like `requesterId`) to blend safely with role constraints.
+- **Profile Module API**: Added `PATCH /api/auth/profile` to securely update standard User entities independently, and `PATCH /api/auth/password` invoking strict BCrypt validations.
+- **Profile Frontend**: Converted `Profile.tsx` from a placeholder into a highly interactive UI with discrete mutating forms for Personal Information and Security (password rotation). Connected directly to the global React Query store.
+
 ## [1.7.0] - 2026-07-04 (User Deletion & Safety Sprint)
 
 ### Added

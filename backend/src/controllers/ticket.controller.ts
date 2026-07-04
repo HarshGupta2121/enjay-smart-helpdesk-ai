@@ -17,12 +17,6 @@ export class TicketController {
       requesterId 
     } = req.query;
 
-    const userRole = req.user!.role;
-    const userId = req.user!.userId;
-
-    // RBAC: Customers can ONLY fetch their own tickets
-    const forcedRequesterId = userRole === 'CUSTOMER' ? userId : (requesterId as string);
-
     const data = await ticketService.getTickets({
       page: page ? Number(page) : 1,
       limit: limit ? Number(limit) : 20,
@@ -31,8 +25,8 @@ export class TicketController {
       priority: priority as string,
       category: category as string,
       assigneeId: assigneeId as string,
-      requesterId: forcedRequesterId
-    });
+      requesterId: requesterId as string
+    }, req.user!);
 
     return sendSuccess(res, StatusCodes.OK, 'Tickets fetched successfully', data);
   };

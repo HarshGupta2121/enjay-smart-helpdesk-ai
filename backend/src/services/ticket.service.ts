@@ -3,6 +3,7 @@ import routingService from './routing.service';
 import { isValidTransition } from '../utils/ticketStateMachine';
 import { BadRequestError, NotFoundError } from '../utils/errors';
 import { Prisma, TicketStatus, TicketPriority } from '@prisma/client';
+import prisma from '../config/prisma';
 
 export class TicketService {
   async getTickets(filters: {
@@ -14,9 +15,32 @@ export class TicketService {
     search?: string;
     page?: number;
     limit?: number;
-  }) {
+  }, user: { userId: string; role: string }) {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
+
+    let enforcedWhere: Prisma.TicketWhereInput | undefined = undefined;
+
+    if (user.role === 'CUSTOMER') {
+      enforcedWhere = { requesterId: user.userId };
+    } else if (user.role === 'ENGINEER') {
+      enforcedWhere = { 
+        OR: [
+          { assigneeId: user.userId },
+          { requesterId: user.userId }
+        ] 
+      };
+    } else if (user.role === 'MANAGER') {
+      const userTeams = await prisma.teamMember.findMany({ where: { userId: user.userId } });
+      const teamIds = userTeams.map(t => t.teamId);
+      enforcedWhere = { 
+        OR: [
+          { teamId: { in: teamIds } },
+          { requesterId: user.userId }
+        ] 
+      };
+    }
+    // ADMIN has no enforcedWhere (sees all tickets)
     
     return ticketRepository.findTickets({
       status: filters.status,
@@ -27,7 +51,7 @@ export class TicketService {
       searchTerm: filters.search,
       page,
       limit
-    });
+    }, enforcedWhere);
   }
 
   /**

@@ -161,6 +161,19 @@ export class AuthService {
 
     await authRepository.createAuditLog('LOGOUT', userId, ipAddress, userAgent);
   }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await authRepository.findUserById(userId);
+    if (!user) throw new NotFoundError('User not found');
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isPasswordValid) throw new BadRequestError('Invalid current password');
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    
+    // Using user.repository logic to update since auth repository doesn't have an update method natively exposed
+    return require('../repositories/user.repository').default.updateUser(userId, { passwordHash: newPasswordHash });
+  }
 }
 
 export default new AuthService();

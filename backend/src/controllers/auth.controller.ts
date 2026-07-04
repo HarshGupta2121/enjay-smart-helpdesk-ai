@@ -98,6 +98,20 @@ export class AuthController {
     const user = await userService.getUserById(req.user!.userId);
     return sendSuccess(res, StatusCodes.OK, 'Profile fetched', user);
   }
+
+  public updateProfile = async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    // Assuming userService handles the updates securely
+    const user = await userService.updateUser(userId, req.body);
+    return sendSuccess(res, StatusCodes.OK, 'Profile updated successfully', { user });
+  };
+
+  public changePassword = async (req: Request, res: Response) => {
+    const userId = req.user!.userId;
+    const { currentPassword, newPassword } = req.body;
+    await authService.changePassword(userId, currentPassword, newPassword);
+    return sendSuccess(res, StatusCodes.OK, 'Password changed successfully');
+  };
 }
 
 export default new AuthController();

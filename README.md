@@ -60,6 +60,7 @@ This repository utilizes an npm workspaces monorepo architecture:
 - **Sprint 9**: AI Copilot Frontend (React Query integrations, Editable Drafts, Similar Ticket UI, Semantic layout updates).
 - **v1.0 Release**: Production Hardening (Global Error Boundaries, React.lazy Code Splitting, Strict CORS, Helmet Security Headers, Swagger OpenAPI Documentation, Repository Hygiene).
 - **Sprint 10**: Frontend Polish & Production UI Completion (Fully implemented My Tickets, All Tickets, Users Directory, and Profile Settings pages with React Query and shadcn/ui).
+- **Sprint 11**: Strict Backend RBAC & User Profile Module (Deep ticket visibility scoping for ENGINEER/MANAGER/CUSTOMER roles, Profile mutators, Password rotations).
 
 ## Getting Started
 
