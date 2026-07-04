@@ -9,6 +9,7 @@ import { ProtectedRoute } from '@/components/guards/ProtectedRoute';
 import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import Tickets from '@/pages/Tickets';
+import TicketDetails from '@/pages/TicketDetails';
 import MyTickets from '@/pages/MyTickets';
 import Users from '@/pages/Users';
 import Profile from '@/pages/Profile';
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
           {
             path: '/my-tickets',
             element: <MyTickets />,
+          },
+          {
+            path: '/tickets/:id',
+            element: <TicketDetails />,
           },
           {
             path: '/profile',
