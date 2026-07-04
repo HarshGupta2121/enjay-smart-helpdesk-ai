@@ -12,7 +12,12 @@
       "Bash(npm pkg *)",
       "Bash(npx prisma *)",
       "Bash(node *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :4000)",
+      "Bash(taskkill *)",
+      "Bash(npx ts-node *)",
+      "Bash(findstr :5173)"
     ]
   }
 }

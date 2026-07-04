@@ -1,5 +1,5 @@
 import prisma from '../config/prisma';
-import { Prisma, TicketStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { ConflictError } from '../utils/errors';
 
 export class TicketRepository {

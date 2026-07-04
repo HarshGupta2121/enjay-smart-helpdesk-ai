@@ -66,6 +66,7 @@ export class UserService {
     const passwordHash = await bcrypt.hash(data.password, 10);
     
     // Strip out the raw 'password' and 'role' string before passing to Prisma
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, role: roleCode, ...validData } = data;
 
     return userRepository.createUser({
