@@ -94,9 +94,8 @@ export class AIService {
 
       const combinedText = `Title: ${ticket.title}\nDescription: ${ticket.description}`;
 
-      // Execute AI processing concurrently
-      const [summary, classification, embedding] = await Promise.all([
-        llmService.generateText(`
+      // Execute AI processing sequentially to prevent Gemini Free Tier Rate Limits (429)
+      const summary = await llmService.generateText(`
           You are an expert IT Service Management AI analyzing a support ticket.
           Generate a technical summary based STRICTLY on the provided context.
 
@@ -131,10 +130,10 @@ export class AIService {
           Title: ${ticket.title}
           Description: ${ticket.description}
           Customer Full Name: ${ticket.requester?.fullName || 'Customer'}
-        `),
-        llmService.generateClassification(ticket.title, ticket.description),
-        embeddingService.generateEmbedding(combinedText),
-      ]);
+        `);
+
+      const classification = await llmService.generateClassification(ticket.title, ticket.description);
+      const embedding = await embeddingService.generateEmbedding(combinedText);
 
       // Detect Duplicates (Using Math locally if pgvector extension is missing, or raw SQL if present)
       const duplicateData = await this.detectDuplicates(ticketId, embedding);
