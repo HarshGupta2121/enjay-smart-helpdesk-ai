@@ -24,7 +24,9 @@ export class AIService {
       - Never hallucinate or invent facts.
       - Never mention information not explicitly present in the ticket context.
       - If uncertain about the resolution, clearly state that more information is required.
-      - Use Markdown formatting.
+      - Use Markdown formatting with headings and bullet points.
+      - Address the customer strictly by their FIRST NAME.
+      - Return clean Markdown only.
 
       REQUIRED FORMAT:
       Hi [Customer's FIRST NAME],
@@ -33,12 +35,14 @@ export class AIService {
 
       [Issue Understanding - summarize their issue in natural language]
 
-      [Suggested Resolution - clear numbered troubleshooting steps]
+      ### Troubleshooting Steps
+      [Suggested Resolution - clear numbered or bulleted troubleshooting steps]
 
+      ### Next Steps
       [Additional Information - mention what may be required if issue persists]
 
       Best Regards,
-      Enjay Smart HelpDesk AI
+      **Enjay Smart HelpDesk AI**
 
       TICKET DATA:
       Title: ${ticket.title}
@@ -66,7 +70,42 @@ export class AIService {
 
       // Execute AI processing concurrently
       const [summary, classification, embedding] = await Promise.all([
-        llmService.generateText(`Summarize this support ticket in exactly one sentence:\n\n${combinedText}`),
+        llmService.generateText(`
+          You are an expert IT Service Management AI analyzing a support ticket.
+          Generate a technical summary based STRICTLY on the provided context.
+
+          RULES:
+          - Never hallucinate or invent facts.
+          - Never mention information not explicitly present in the ticket.
+          - If uncertain about a cause or resolution, clearly state "More information required".
+          - Use exact Markdown formatting as shown below, including headings and bullet points.
+          - Extract FIRST NAME ONLY from the Customer Full Name.
+          - Return clean Markdown only.
+
+          REQUIRED FORMAT:
+          ## Ticket Summary
+
+          **Customer:**
+          [FIRST NAME]
+
+          **Issue:**
+          [Problem Summary]
+
+          **Possible Cause:**
+          [Root Cause if inferable, else "More information required"]
+
+          **Recommended Action:**
+          - [Step 1]
+          - [Step 2]
+
+          **Priority:**
+          [Priority Assessment]
+
+          TICKET DATA:
+          Title: ${ticket.title}
+          Description: ${ticket.description}
+          Customer Full Name: ${ticket.requester?.fullName || 'Customer'}
+        `),
         llmService.generateClassification(ticket.title, ticket.description),
         embeddingService.generateEmbedding(combinedText),
       ]);
