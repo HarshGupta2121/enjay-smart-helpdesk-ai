@@ -10,7 +10,7 @@ This repository utilizes an npm workspaces monorepo architecture:
 ## Current Implemented Features
 
 ### 1. Enterprise Authentication Engine
-- **Users Management**: Fully implemented Users module with paginated directory queries via `GET /api/users`, and active mutators for creating (`POST`) and updating (`PATCH`) user details directly from the Dashboard.
+- **Users Management**: Fully implemented Users module with paginated directory queries via `GET /api/users`, and active mutators for creating (`POST`) updating (`PATCH`), and securely deleting (`DELETE`) user details directly from the Dashboard.
 - **Profile Resolution**: Extends default JWT validation by dynamically hydrating `/api/auth/profile` responses with rich, relational entity data including active avatars and explicit Role labels.
 - Highly secure registration and login via standard JWT structure.
 - **Refresh Token Rotation**: Automatic token refresh seamlessly handled by Axios interceptors avoiding 401 logouts.

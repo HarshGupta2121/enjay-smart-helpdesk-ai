@@ -27,3 +27,8 @@ export const updateUser = async ({ id, data }: { id: string; data: any }) => {
   await Promise.all(promises);
   return { success: true };
 };
+
+export const deleteUser = async (id: string) => {
+  const response = await api.delete(`/users/${id}`);
+  return response.data;
+};

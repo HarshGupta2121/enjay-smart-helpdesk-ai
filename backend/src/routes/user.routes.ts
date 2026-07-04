@@ -77,4 +77,15 @@ router.patch('/:id/status', validate(updateUserStatusSchema), asyncHandler(userC
  */
 router.post('/', requireRole(['ADMIN']), validate(createUserSchema), asyncHandler(userController.createUser));
 
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   delete:
+ *     summary: Delete a user
+ *     security:
+ *       - bearerAuth: []
+ */
+router.delete('/:id', requireRole(['ADMIN']), asyncHandler(userController.deleteUser));
+
 export default router;

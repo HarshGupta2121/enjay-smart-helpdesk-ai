@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { useUsers, useCreateUser, useUpdateUser } from '@/hooks/useUsers';
+import { useUsers, useCreateUser, useUpdateUser, useDeleteUser } from '@/hooks/useUsers';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Search, AlertCircle, Users as UsersIcon, RefreshCcw, Mail, Shield, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { useAuthStore } from '@/store/authStore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Users() {
@@ -34,6 +35,19 @@ export default function Users() {
 
     const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
+
+  const { user: currentUser } = useAuthStore();
+  const deleteMutation = useDeleteUser();
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+
+  const handleDeleteConfirm = () => {
+    if (deleteUserId) {
+      deleteMutation.mutate(deleteUserId, {
+        onSuccess: () => setDeleteUserId(null)
+      });
+    }
+  };
+
 
   const handleOpenCreate = () => {
     setEditingUser(null);
@@ -214,6 +228,14 @@ export default function Users() {
                         >
                           Edit
                         </button>
+                        <button
+                          onClick={() => setDeleteUserId(user.id)}
+                          disabled={user.id === currentUser?.id}
+                          className="text-xs font-medium text-destructive hover:underline ml-3 disabled:opacity-50 disabled:no-underline"
+                        >
+                          Delete
+                        </button>
+
                       </TableCell>
                     </TableRow>
                   ))}
@@ -323,6 +345,34 @@ export default function Users() {
               </button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deleteUserId} onOpenChange={(open) => !open && setDeleteUserId(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this user? This action cannot be undone and they will lose all access to the system.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="pt-4 flex items-center justify-end gap-2">
+            <button
+              onClick={() => setDeleteUserId(null)}
+              disabled={deleteMutation.isPending}
+              className="px-4 py-2 border border-input bg-background rounded-md text-sm font-medium hover:bg-muted disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              disabled={deleteMutation.isPending}
+              className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 px-4 py-2 disabled:opacity-50"
+            >
+              {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete User
+            </button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

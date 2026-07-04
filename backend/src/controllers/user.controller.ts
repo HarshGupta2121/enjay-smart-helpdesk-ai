@@ -47,6 +47,14 @@ export class UserController {
     const user = await userService.createUser(req.body);
     return sendSuccess(res, StatusCodes.CREATED, 'User created successfully', { user });
   };
+
+  public deleteUser = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const requesterId = req.user!.userId;
+    
+    await userService.deleteUser(id, requesterId);
+    return sendSuccess(res, StatusCodes.OK, 'User deleted successfully');
+  };
 }
 
 export default new UserController();

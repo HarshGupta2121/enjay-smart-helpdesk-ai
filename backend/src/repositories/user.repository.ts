@@ -88,6 +88,19 @@ export class UserRepository {
     });
   }
 
+  async deleteUser(id: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { deletedAt: new Date() }
+    });
+  }
+
+  async countUsersByRoleCode(code: string) {
+    return prisma.user.count({
+      where: { role: { code }, deletedAt: null }
+    });
+  }
+
   async findRoleByCode(code: string) {
     return prisma.role.findUnique({ where: { code } });
   }

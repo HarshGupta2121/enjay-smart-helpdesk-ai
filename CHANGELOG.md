@@ -5,6 +5,13 @@ All notable changes to the Enjay Smart HelpDesk AI project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-07-04 (User Deletion & Safety Sprint)
+
+### Added
+- **Delete User Endpoint**: Introduced `DELETE /api/users/:id` with strict backend safety checks preventing users from deleting themselves or the last active `ADMIN` in the system.
+- **Delete UI & Modal**: Added an explicit delete action button to the Users Management grid alongside a Shadcn confirmation modal.
+- **Cache Invalidation**: Linked the deletion mutation to React Query for immediate, seamless cache synchronization and UI removal.
+
 ## [1.6.0] - 2026-07-04 (Users Management UI Sprint)
 
 ### Added

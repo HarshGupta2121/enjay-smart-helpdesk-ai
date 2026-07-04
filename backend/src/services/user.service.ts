@@ -71,6 +71,24 @@ export class UserService {
       role: { connect: { id: role.id } }
     });
   }
+
+  async deleteUser(id: string, requesterId: string) {
+    if (id === requesterId) {
+      throw new BadRequestError('You cannot delete your own account');
+    }
+
+    const user = await userRepository.findUserById(id);
+    if (!user) throw new NotFoundError('User not found');
+
+    if (user.role.code === 'ADMIN') {
+      const adminCount = await userRepository.countUsersByRoleCode('ADMIN');
+      if (adminCount <= 1) {
+        throw new BadRequestError('Cannot delete the last administrator account');
+      }
+    }
+
+    return userRepository.deleteUser(id);
+  }
 }
 
 export default new UserService();
