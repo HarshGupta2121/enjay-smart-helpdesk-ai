@@ -9,6 +9,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import authRoutes from './routes/auth.routes';
 import ticketRoutes from './routes/ticket.routes';
 import teamRoutes from './routes/team.routes';
+import userRoutes from './routes/user.routes';
 import aiRoutes from './routes/ai.routes';
 import { errorHandler } from './middlewares/errorHandler';
 
@@ -57,6 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/tickets', aiRoutes); // Mounted under tickets for /:id/ai/reply
 app.use('/api/teams', teamRoutes);
+app.use('/api/users', userRoutes);
 
 // Global Error Handler (must be the last middleware)
 app.use(errorHandler);

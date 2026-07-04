@@ -2,7 +2,7 @@
 
 This file contains the credentials for the default seed data generated for development and QA testing. 
 
-All accounts are pre-verified and active.
+All accounts are pre-verified, active, and dynamically seeded with unique UI avatars.
 
 ## 🔑 Demo Accounts
 
@@ -17,7 +17,7 @@ All accounts are pre-verified and active.
 
 ## 🎫 Seeded Entities
 The `npm run db:seed` command automatically populates the database with:
-- **10 Sample Tickets**: Spanning various states (`NEW`, `OPEN`, `PENDING`, `RESOLVED`, `CLOSED`), categories (`HARDWARE`, `SOFTWARE`, `NETWORK`, `ACCOUNT`), and priorities.
+- **11 Sample Tickets**: Spanning various states (`NEW`, `OPEN`, `PENDING`, `RESOLVED`, `CLOSED`), categories (`HARDWARE`, `SOFTWARE`, `NETWORK`, `ACCOUNT`), and priorities.
 - **AI Intelligence**: Each ticket is pre-populated with AI summaries, confidence scores, and sentiment analysis for UI visualization.
 - **Event Timeline**: Tickets contain sample `TicketActivity` audit logs (e.g., status changes) and `TicketComment` replies simulating agent interaction.
 

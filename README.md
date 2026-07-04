@@ -10,6 +10,8 @@ This repository utilizes an npm workspaces monorepo architecture:
 ## Current Implemented Features
 
 ### 1. Enterprise Authentication Engine
+- **Users Management**: Fully implemented Users module with paginated directory queries, role updates, and secure status mutators via `GET /api/users`.
+- **Profile Resolution**: Extends default JWT validation by dynamically hydrating `/api/auth/profile` responses with rich, relational entity data including active avatars and explicit Role labels.
 - Highly secure registration and login via standard JWT structure.
 - **Refresh Token Rotation**: Automatic token refresh seamlessly handled by Axios interceptors avoiding 401 logouts.
 - **Security Context**: Cryptographically generated Refresh Tokens are stored natively as hashed `SHA-256` tokens in PostgreSQL avoiding complete compromise during DB breaches.
@@ -57,6 +59,7 @@ This repository utilizes an npm workspaces monorepo architecture:
 - **Sprint 8**: AI Intelligence Sprint (Pluggable LLM, pgvector Duplicate Detection, Automatic Summarization).
 - **Sprint 9**: AI Copilot Frontend (React Query integrations, Editable Drafts, Similar Ticket UI, Semantic layout updates).
 - **v1.0 Release**: Production Hardening (Global Error Boundaries, React.lazy Code Splitting, Strict CORS, Helmet Security Headers, Swagger OpenAPI Documentation, Repository Hygiene).
+- **Sprint 10**: Frontend Polish & Production UI Completion (Fully implemented My Tickets, All Tickets, Users Directory, and Profile Settings pages with React Query and shadcn/ui).
 
 ## Getting Started
 

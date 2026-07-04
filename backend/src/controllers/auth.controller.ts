@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import authService from '../services/auth.service';
+import userService from '../services/user.service';
 import { sendSuccess } from '../utils/responseHelper';
 import { StatusCodes } from 'http-status-codes';
 
@@ -94,9 +95,8 @@ export class AuthController {
   }
 
   async getProfile(req: Request, res: Response) {
-    return sendSuccess(res, StatusCodes.OK, 'Profile fetched', {
-      user: req.user,
-    });
+    const user = await userService.getUserById(req.user!.userId);
+    return sendSuccess(res, StatusCodes.OK, 'Profile fetched', user);
   }
 }
 

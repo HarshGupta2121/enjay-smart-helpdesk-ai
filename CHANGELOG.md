@@ -5,6 +5,22 @@ All notable changes to the Enjay Smart HelpDesk AI project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-07-04 (Users Management & RBAC Sprint)
+
+### Added
+- **Users Management API**: Built the complete backend `UserController`, `UserService`, and `UserRepository` to support `GET /api/users`, enabling the frontend's system directory to function natively.
+- **My Tickets RBAC**: Enforced Role-Based Access Control inside `ticket.controller.ts` preventing `CUSTOMER` accounts from fetching global tickets natively at the query level.
+- **Enhanced Profile Endpoint**: Upgraded `GET /api/auth/profile` to strictly hydrate full User relational records, preventing "UNKNOWN" role UI states across the app.
+- **Dynamic Avatars**: Automatically generated contextual profile avatars into the `prisma/seed.ts` file utilizing Pravatar generation.
+
+## [1.4.0] - 2026-07-04 (Frontend Polish Sprint)
+
+### Added
+- **My Tickets Page**: Fully implemented user-specific ticket tracking with React Query, search, status filtering, and pagination.
+- **All Tickets Page**: Complete global ticket directory for Admins and Managers with extensive filtering capabilities.
+- **Users Directory**: Implemented the Users management dashboard with role-based filtering, semantic search, and robust error handling.
+- **System Settings**: Built a comprehensive profile and settings dashboard connected to the backend auth profile, featuring an interactive Theme selection UI.
+
 ## [1.3.0] - 2026-07-04 (v1.0 Production Hardening)
 
 ### Added
