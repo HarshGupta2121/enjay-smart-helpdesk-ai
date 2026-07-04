@@ -7,7 +7,8 @@ export class AIController {
   public generateReply = async (req: Request, res: Response) => {
     const { id } = req.params; // ticketId
 
-    const draft = await aiService.generateDraftReply(id);
+    const force = req.query.force === 'true';
+    const draft = await aiService.generateDraftReply(id, force);
 
     return sendSuccess(res, StatusCodes.OK, 'Draft reply generated successfully', { draft });
   };

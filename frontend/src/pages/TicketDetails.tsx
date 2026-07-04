@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
@@ -21,12 +21,23 @@ export default function TicketDetails() {
   const { user: currentUser } = useAuthStore();
   const [commentContent, setCommentContent] = useState('');
   const [aiDraft, setAiDraft] = useState<string | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   const { data, isLoading, isError } = useTicketTimeline(id!);
-  const { data: similarTicketsData, isLoading: similarLoading } = useSimilarTickets(id!);
+  const { data: similarTicketsData } = useSimilarTickets(id!);
   const updateStatusMutation = useUpdateTicketStatus();
   const addCommentMutation = useAddComment();
   const generateAiMutation = useGenerateAiReply();
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (generateAiMutation.isPending) {
+      setElapsedTime(0);
+      interval = setInterval(() => setElapsedTime((prev) => prev + 100), 100);
+    }
+    return () => clearInterval(interval);
+  }, [generateAiMutation.isPending]);
+
 
   // Helper to extract initials for avatars
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || 'U';
@@ -82,8 +93,8 @@ export default function TicketDetails() {
     );
   };
 
-  const handleGenerateAiReply = () => {
-    generateAiMutation.mutate(ticket.id, {
+  const handleGenerateAiReply = (force = false) => {
+    generateAiMutation.mutate({ id: ticket.id, force }, {
       onSuccess: (draft) => {
         setAiDraft(draft);
       },
@@ -342,10 +353,16 @@ Unknown`}
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 {generateAiMutation.isPending && (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <Skeleton className="h-4 w-4/6" />
+                  <div className="space-y-4">
+                    <div className="flex items-center text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {elapsedTime >= 10000 ? "Generating AI response..." : `Drafting... ${(elapsedTime / 1000).toFixed(1)}s`}
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-5/6" />
+                      <Skeleton className="h-4 w-4/6" />
+                    </div>
                   </div>
                 )}
 
@@ -354,7 +371,7 @@ Unknown`}
                     <AlertCircle className="h-6 w-6 text-destructive mb-2" />
                     <p className="text-sm text-foreground mb-3">Failed to generate AI reply.</p>
                     <button
-                      onClick={handleGenerateAiReply}
+                      onClick={() => handleGenerateAiReply(false)}
                       className="text-xs px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium transition-colors"
                     >
                       Retry Generation
@@ -373,7 +390,7 @@ Unknown`}
                     />
                     <div className="flex items-center justify-between pt-2">
                       <button
-                        onClick={handleGenerateAiReply}
+                        onClick={() => handleGenerateAiReply(true)}
                         className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center"
                         aria-label="Regenerate response"
                       >
@@ -424,7 +441,7 @@ Unknown`}
 
                     {['ADMIN', 'MANAGER', 'ENGINEER'].includes(currentUser?.role || '') && (
                       <button
-                        onClick={handleGenerateAiReply}
+                        onClick={() => handleGenerateAiReply(false)}
                         disabled={generateAiMutation.isPending || addCommentMutation.isPending}
                         className="flex items-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors p-2 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-950/50 disabled:opacity-50"
                       >

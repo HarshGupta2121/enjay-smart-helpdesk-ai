@@ -64,7 +64,7 @@ export const fetchSimilarTickets = async (id: string): Promise<SimilarTicket[]> 
   return response.data.data;
 };
 
-export const generateAiReply = async (id: string): Promise<string> => {
-  const response = await api.post(`/tickets/${id}/ai/reply`);
+export const generateAiReply = async ({ id, force }: { id: string, force?: boolean }): Promise<string> => {
+  const response = await api.post(`/tickets/${id}/ai/reply${force ? '?force=true' : ''}`);
   return response.data.data.draft;
 };

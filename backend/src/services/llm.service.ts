@@ -24,7 +24,7 @@ const extractRetryDelay = (errorMessage: string): number => {
   return 30000; // Default 30s
 };
 
-const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 2, timeoutMs = 15000): Promise<T> => {
+const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 1, timeoutMs = 15000): Promise<T> => {
   let attempt = 0;
   while (attempt <= maxRetries) {
     try {

@@ -1,17 +1,33 @@
 import prisma from '../config/prisma';
 import llmService from './llm.service';
 import embeddingService from './embedding.service';
-import { Ticket, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 export class AIService {
+  private draftCache = new Map<string, { draft: string, timestamp: number }>();
+
   /**
    * Generates a draft reply for an agent based on the ticket context.
    * Does NOT auto-send. It simply returns the string to populate the UI.
    */
-  async generateDraftReply(ticketId: string): Promise<string> {
+  async generateDraftReply(ticketId: string, forceRegenerate = false): Promise<string> {
+    if (!forceRegenerate && this.draftCache.has(ticketId)) {
+      console.log(`[AI Service] Cache hit for ticket ${ticketId} draft.`);
+      return this.draftCache.get(ticketId)!.draft;
+    }
+
+    // Optimization: Select ONLY necessary fields. NO timeline/comments/metadata.
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
-      include: { comments: true, requester: true },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        priority: true,
+        category: true,
+        requester: { select: { fullName: true } }
+      }
     });
 
     if (!ticket) throw new Error('Ticket not found');
@@ -48,10 +64,20 @@ export class AIService {
       Title: ${ticket.title}
       Description: ${ticket.description}
       Customer Full Name: ${ticket.requester?.fullName || 'Customer'}
-      Current Status: ${ticket.status}
+      Priority: ${ticket.priority}
+      Category: ${ticket.category}
     `;
 
-    return llmService.generateText(prompt);
+    const start = Date.now();
+    const draft = await llmService.generateText(prompt);
+    const end = Date.now();
+
+    console.log(`
+[AI Service] Gemini Draft Response Time: ${end - start}ms`);
+
+    this.draftCache.set(ticketId, { draft, timestamp: Date.now() });
+
+    return draft;
   }
 
   /**
