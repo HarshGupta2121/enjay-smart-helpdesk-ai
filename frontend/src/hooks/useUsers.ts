@@ -52,7 +52,7 @@ export const useDeleteUser = () => {
       toast.success('User deleted successfully');
     },
     onError: (error: any) => {
-      const msg = error.response?.data?.message || 'Failed to delete user';
+      const msg = error.response?.data?.message || error.message || 'Failed to delete user';
       toast.error(msg);
     },
   });
