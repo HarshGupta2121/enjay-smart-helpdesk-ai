@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { TicketPriority, TicketSource, TicketType, TicketCategory, TicketStatus } from '@prisma/client';
+const emptyAsUndefined = <T extends z.ZodTypeAny>(schema: T) => z.preprocess((val) => (val === '' ? undefined : val), schema);
+
 
 // ==========================================
 //              SHARED SCHEMAS
@@ -29,10 +31,10 @@ export const createTicketSchema = z.object({
     description: z.string().trim().min(10, 'Description must be at least 10 characters').max(5000, 'Description cannot exceed 5000 characters'),
 
     // Strict Enum constraints
-    priority: z.nativeEnum(TicketPriority).optional(),
+    priority: emptyAsUndefined(z.nativeEnum(TicketPriority).optional()),
     source: z.nativeEnum(TicketSource).optional(),
     type: z.nativeEnum(TicketType).optional(),
-    category: z.nativeEnum(TicketCategory).optional(),
+    category: emptyAsUndefined(z.nativeEnum(TicketCategory).optional()),
 
     // Optional file upload constraints
     attachments: z.array(attachmentSchema).max(5, 'Maximum of 5 attachments allowed per ticket').optional(),
@@ -94,16 +96,16 @@ export const searchFilterSchema = z.object({
     limit: z.string().regex(/^\d+$/).transform(Number).optional().default(20),
 
     // Strict filters
-    status: z.nativeEnum(TicketStatus).optional(),
-    priority: z.nativeEnum(TicketPriority).optional(),
-    category: z.nativeEnum(TicketCategory).optional(),
+    status: emptyAsUndefined(z.nativeEnum(TicketStatus).optional()),
+    priority: emptyAsUndefined(z.nativeEnum(TicketPriority).optional()),
+    category: emptyAsUndefined(z.nativeEnum(TicketCategory).optional()),
 
     // Relation filters
-    assigneeId: z.string().uuid('Invalid assignee ID format').optional(),
-    requesterId: z.string().uuid('Invalid requester ID format').optional(),
+    assigneeId: emptyAsUndefined(z.string().uuid('Invalid assignee ID format').optional()),
+    requesterId: emptyAsUndefined(z.string().uuid('Invalid requester ID format').optional()),
 
     // Safe text search (trimmed, min length prevents wildcard performance issues)
-    search: z.string().trim().min(2, 'Search term too short').max(100, 'Search term too long').optional(),
+    search: emptyAsUndefined(z.string().trim().min(2, 'Search term too short').max(100, 'Search term too long').optional()),
 
     // Sorting controls
     sortBy: z.enum(['createdAt', 'updatedAt', 'priority', 'status']).optional().default('createdAt'),
