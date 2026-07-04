@@ -14,6 +14,16 @@ export interface LLMProvider {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const extractRetryDelay = (errorMessage: string): number => {
+  const match = errorMessage.match(/Please retry in (\d+(?:\.\d+)?)(s|ms)/i);
+  if (match) {
+    const value = parseFloat(match[1]);
+    const unit = match[2].toLowerCase();
+    return (unit === 's' ? value * 1000 : value) + 2000; // Add 2s safety buffer
+  }
+  return 30000; // Default 30s
+};
+
 const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 2, timeoutMs = 15000): Promise<T> => {
   let attempt = 0;
   while (attempt <= maxRetries) {
@@ -146,10 +156,10 @@ class GeminiProvider implements LLMProvider {
 // 2. OpenAI Provider Implementation (Example Shell)
 // ---------------------------------------------------------
 class OpenAIProvider implements LLMProvider {
-  async generateText(prompt: string): Promise<string> {
+  async generateText(_prompt: string): Promise<string> {
     throw new Error('OpenAI Provider not fully implemented in this shell');
   }
-  async generateClassification(title: string, description: string): Promise<any> {
+  async generateClassification(_title: string, _description: string): Promise<any> {
     throw new Error('OpenAI Provider not fully implemented in this shell');
   }
 }
@@ -158,10 +168,10 @@ class OpenAIProvider implements LLMProvider {
 // 3. Ollama Provider Implementation (Local LLM)
 // ---------------------------------------------------------
 class OllamaProvider implements LLMProvider {
-  async generateText(prompt: string): Promise<string> {
+  async generateText(_prompt: string): Promise<string> {
     throw new Error('Ollama Provider not fully implemented in this shell');
   }
-  async generateClassification(title: string, description: string): Promise<any> {
+  async generateClassification(_title: string, _description: string): Promise<any> {
     throw new Error('Ollama Provider not fully implemented in this shell');
   }
 }

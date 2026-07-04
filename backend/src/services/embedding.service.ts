@@ -2,6 +2,16 @@ import { GoogleGenAI } from '@google/genai';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const extractRetryDelay = (errorMessage: string): number => {
+  const match = errorMessage.match(/Please retry in (\d+(?:\.\d+)?)(s|ms)/i);
+  if (match) {
+    const value = parseFloat(match[1]);
+    const unit = match[2].toLowerCase();
+    return (unit === 's' ? value * 1000 : value) + 2000; // Add 2s safety buffer
+  }
+  return 30000; // Default 30s
+};
+
 export class EmbeddingService {
   /**
    * Generates a vector embedding for a given text.
@@ -34,8 +44,9 @@ export class EmbeddingService {
           if (attempt > retries) throw error;
 
           if (isRateLimit) {
-            console.warn(`[Embedding Service] Rate limit exceeded (429). Waiting 40 seconds before attempt ${attempt + 1}...`);
-            await delay(40000);
+            const waitTime = extractRetryDelay(errorMessage);
+            console.warn(`[Embedding Service] Rate limit exceeded (429). Waiting ${Math.round(waitTime / 1000)} seconds before attempt ${attempt + 1}...`);
+            await delay(waitTime);
           } else {
             console.warn(`[Embedding Service] Attempt ${attempt} failed: ${errorMessage}. Retrying in 2 seconds...`);
             await delay(2000);
