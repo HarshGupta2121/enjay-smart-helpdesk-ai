@@ -1,32 +1,40 @@
+import React, { Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 // Layouts & Guards
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import PublicLayout from '@/components/layouts/PublicLayout';
 import { ProtectedRoute } from '@/components/guards/ProtectedRoute';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 
-// Pages
-import Login from '@/pages/Login';
-import Dashboard from '@/pages/Dashboard';
-import Tickets from '@/pages/Tickets';
-import TicketDetails from '@/pages/TicketDetails';
-import CreateTicket from '@/pages/CreateTicket';
-import MyTickets from '@/pages/MyTickets';
-import Users from '@/pages/Users';
-import Profile from '@/pages/Profile';
-import Settings from '@/pages/Settings';
-import NotFound from '@/pages/NotFound';
-import ErrorPage from '@/pages/ErrorPage';
+// Lazy loaded Pages
+const Login = React.lazy(() => import('@/pages/Login'));
+const Dashboard = React.lazy(() => import('@/pages/Dashboard'));
+const Tickets = React.lazy(() => import('@/pages/Tickets'));
+const TicketDetails = React.lazy(() => import('@/pages/TicketDetails'));
+const CreateTicket = React.lazy(() => import('@/pages/CreateTicket'));
+const MyTickets = React.lazy(() => import('@/pages/MyTickets'));
+const Users = React.lazy(() => import('@/pages/Users'));
+const Profile = React.lazy(() => import('@/pages/Profile'));
+const Settings = React.lazy(() => import('@/pages/Settings'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
+const ErrorPage = React.lazy(() => import('@/pages/ErrorPage'));
+
+const withSuspense = (Component: React.LazyExoticComponent<any>) => (
+  <Suspense fallback={<LoadingScreen />}>
+    <Component />
+  </Suspense>
+);
 
 export const router = createBrowserRouter([
   // Public Routes
   {
     element: <PublicLayout />,
-    errorElement: <ErrorPage />,
+    errorElement: withSuspense(ErrorPage),
     children: [
       {
         path: '/login',
-        element: <Login />,
+        element: withSuspense(Login),
       },
     ],
   },
@@ -34,7 +42,7 @@ export const router = createBrowserRouter([
   // Protected Dashboard Routes
   {
     element: <ProtectedRoute />,
-    errorElement: <ErrorPage />,
+    errorElement: withSuspense(ErrorPage),
     children: [
       {
         element: <DashboardLayout />,
@@ -47,24 +55,24 @@ export const router = createBrowserRouter([
           // All authenticated users
           {
             path: '/dashboard',
-            element: <Dashboard />,
+            element: withSuspense(Dashboard),
           },
           {
             path: '/my-tickets',
-            element: <MyTickets />,
+            element: withSuspense(MyTickets),
           },
           // Anyone authenticated can create a ticket
           {
             path: '/tickets/new',
-            element: <CreateTicket />,
+            element: withSuspense(CreateTicket),
           },
           {
             path: '/tickets/:id',
-            element: <TicketDetails />,
+            element: withSuspense(TicketDetails),
           },
           {
             path: '/profile',
-            element: <Profile />,
+            element: withSuspense(Profile),
           },
 
           // Agent/Admin Routes
@@ -73,7 +81,7 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: '/tickets',
-                element: <Tickets />,
+                element: withSuspense(Tickets),
               }
             ]
           },
@@ -84,7 +92,7 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: '/settings',
-                element: <Settings />,
+                element: withSuspense(Settings),
               }
             ]
           },
@@ -95,7 +103,7 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: '/users',
-                element: <Users />,
+                element: withSuspense(Users),
               }
             ]
           },
@@ -103,7 +111,7 @@ export const router = createBrowserRouter([
           // 404 Catcher inside dashboard
           {
             path: '*',
-            element: <NotFound />,
+            element: withSuspense(NotFound),
           }
         ],
       },

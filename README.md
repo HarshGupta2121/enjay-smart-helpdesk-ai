@@ -56,6 +56,7 @@ This repository utilizes an npm workspaces monorepo architecture:
 - **Sprint 7**: Backend Team & Routing Module (Team Queues, Round-Robin Auto-Assignment, `LEAST_OPEN` strategies).
 - **Sprint 8**: AI Intelligence Sprint (Pluggable LLM, pgvector Duplicate Detection, Automatic Summarization).
 - **Sprint 9**: AI Copilot Frontend (React Query integrations, Editable Drafts, Similar Ticket UI, Semantic layout updates).
+- **v1.0 Release**: Production Hardening (Global Error Boundaries, React.lazy Code Splitting, Strict CORS, Helmet Security Headers, Swagger OpenAPI Documentation, Repository Hygiene).
 
 ## Getting Started
 

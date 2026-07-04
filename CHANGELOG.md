@@ -5,6 +5,16 @@ All notable changes to the Enjay Smart HelpDesk AI project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-04 (v1.0 Production Hardening)
+
+### Added
+- **Swagger UI / OpenAPI**: Integrated `swagger-ui-express` and `swagger-jsdoc` for interactive backend API documentation at `/api/docs`.
+- **Global Error Boundary**: Added `react-error-boundary` to safely catch unhandled React exceptions and prevent blank screens.
+- **Security Hardening**: Enforced strict CORS origin checks for production and integrated `helmet` for secure HTTP headers.
+- **Route Code Splitting**: Implemented `React.lazy` and `Suspense` across all frontend routes to optimize bundle sizes and reduce initial load chunks.
+- **Documentation**: Added comprehensive `docs/backend.md`.
+- **Repository Hygiene**: Cleared all `.orig` and `.patch` diff artifacts.
+
 ## [1.2.0] - 2026-07-04
 
 ### Added
