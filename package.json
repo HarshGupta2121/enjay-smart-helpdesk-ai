@@ -13,7 +13,8 @@
     "lint": "npm run lint --workspaces",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "db:generate": "npm run db:generate --workspace=backend",
-    "db:push": "npm run db:push --workspace=backend"
+    "db:push": "npm run db:push --workspace=backend",
+    "db:seed": "npm run db:seed --workspace=backend"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",

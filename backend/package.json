@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "lint": "eslint \"src/**/*.ts\"",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed"
   },
   "dependencies": {
     "@prisma/client": "^5.12.1",
