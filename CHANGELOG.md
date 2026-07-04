@@ -5,6 +5,14 @@ All notable changes to the Enjay Smart HelpDesk AI project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-07-05 (Google Gemini API Integration)
+
+### Added
+- **Official GenAI SDK Integration**: Completely removed legacy MockLLMProvider and fully migrated to `@google/genai` targeting the lightning-fast `gemini-2.5-flash` model.
+- **Robust AI Error Handling**: Implemented a `withRetry` wrapper wrapping all LLM calls to handle rate-limiting and transient network errors gracefully (15-second timeout, maximum 2 retries).
+- **Gemini Embeddings**: Integrated `gemini-embedding-2` to accurately generate 768-dimensional context vectors for seamless Duplicate Ticket detection via pgvector.
+- **Advanced Prompt Engineering**: Restructured prompt injection to strictly demand clean Markdown outputs, explicit bullet points, heading usage, and "hallucination prevention" constraints with deterministic `temperature: 0.2` generation limits.
+
 ## [1.10.0] - 2026-07-05 (Gemini AI Implementation Sprint)
 
 ### Added

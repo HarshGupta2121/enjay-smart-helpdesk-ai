@@ -31,6 +31,7 @@ This repository utilizes an npm workspaces monorepo architecture:
 - **Custom SLAs**: Individual teams possess isolated, overriding metrics for First Response and Resolution Service Level Agreements.
 
 ### 4. AI Intelligence Layer
+- **Google Gemini Integration**: Powered natively by the official `@google/genai` SDK. Set `AI_PROVIDER=gemini` and supply your `GEMINI_API_KEY` to seamlessly connect to `gemini-2.5-flash` for advanced triage and drafting, alongside `gemini-embedding-2` for vector generation.
 - **Pluggable Architecture**: Supports hot-swapping between `OPENAI`, `GEMINI`, and local `OLLAMA` providers via Strategy patterns.
 - **Asynchronous Processing**: Background workers generate 1-sentence summaries and classify priority, category, and sentiment dynamically upon ticket creation.
 - **Duplicate Ticket Detection**: Natively supports semantic matching via `pgvector` operators to detect duplicate outages across the platform with automatic in-memory fallbacks for local dev environments.
