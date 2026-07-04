@@ -1,6 +1,7 @@
 import prisma from '../config/prisma';
 import ticketRepository from '../repositories/ticket.repository';
 import teamRepository from '../repositories/team.repository';
+import aiService from './ai.service';
 import { TicketCategory, AssignmentStrategy, Ticket } from '@prisma/client';
 
 export class RoutingService {
@@ -69,6 +70,11 @@ export class RoutingService {
         current: { assigneeId, autoAssigned: true },
       });
     }
+
+    // 6. Trigger Asynchronous Enterprise AI Analysis (Fire and forget)
+    aiService.processNewTicketBackground(ticket.id).catch((err) => {
+      console.error('[RoutingService] Failed to trigger background AI:', err);
+    });
 
     return updatedTicket;
   }

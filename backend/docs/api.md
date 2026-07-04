@@ -16,6 +16,9 @@ Base URL: `http://localhost:4000/api`
 - `PATCH  /:id/status`: Update the ticket status (Enforces strict State Machine rules and Optimistic Locking version checks).
 - `POST   /:id/comments`: Add a public reply or internal note. (Agent replies automatically fulfill the `firstResponseAt` SLA).
 
+## AI Intelligence
+- `POST   /tickets/:id/ai/reply`: Generates a drafted response based on the ticket context using the configured LLM provider.
+
 ## Team Management (`/teams`)
 *(Protected by ADMIN / MANAGER roles)*
 - `POST   /`: Create a new Team, defining custom SLA metrics and Assignment Strategies (e.g., `LEAST_OPEN`).

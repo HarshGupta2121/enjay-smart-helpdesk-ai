@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
 }
 
 // ==========================================
@@ -189,7 +189,7 @@ model AuditLog {
 
 model Team {
   id          String    @id @default(uuid())
-  name        String    @unique // e.g. "Billing", "IT Support", "HR"
+  name        String    @unique
   description String?
 
   members     TeamMember[]
@@ -254,7 +254,6 @@ model Queue {
 //              TICKET ENGINE
 // ==========================================
 
-// Atomic sequence generator for concurrency-safe human-readable ticket numbers
 model TicketSequence {
   id        String   @id @default("TICKET_SEQ")
   lastValue Int      @default(0)
@@ -303,13 +302,18 @@ model Ticket {
   updatedAt           DateTime       @updatedAt
   deletedAt           DateTime?
 
-  // AI Context
+  // ==============================
+  //        AI INTELLIGENCE
+  // ==============================
   aiSummary           String?        @db.Text
   aiSentiment         String?
   aiPriority          TicketPriority?
   aiConfidence        Float?
   aiCategoryReason    String?        @db.Text
   duplicateScore      Float?
+
+  // Native Vector embeddings stored safely as Json arrays until pgvector is enabled globally
+  embedding           Json?
 
   // Sub-modules
   comments            TicketComment[]
@@ -318,7 +322,6 @@ model Ticket {
   attachments         Attachment[]
   tags                TicketTag[]
 
-  // Indexes for high-performance dashboard filtering
   @@index([ticketNumber])
   @@index([status])
   @@index([priority])
