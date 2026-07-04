@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 
 import authRoutes from './routes/auth.routes';
+import ticketRoutes from './routes/ticket.routes';
 import { errorHandler } from './middlewares/errorHandler';
 
 dotenv.config();
@@ -29,6 +30,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/tickets', ticketRoutes);
 
 // Global Error Handler (must be the last middleware)
 app.use(errorHandler);
