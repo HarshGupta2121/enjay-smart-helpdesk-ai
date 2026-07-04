@@ -1,0 +1,83 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "Enjay HelpDesk Tickets",
+  "collectionId": "ticket-engine-1234",
+  "dateExported": "2026-07-04T07:00:00.000Z",
+  "version": "1.2",
+  "folders": [],
+  "requests": [
+    {
+      "_id": "req-ticket-1",
+      "colId": "ticket-engine-1234",
+      "containerId": "",
+      "name": "1. Create Ticket",
+      "url": "http://localhost:4000/api/tickets",
+      "method": "POST",
+      "sortNum": 10000,
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "auth": { "type": "bearer", "bearer": "{{accessToken}}" },
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"title\": \"System is crashing on startup\",\n  \"description\": \"Every time I try to launch the desktop app, it crashes immediately.\",\n  \"priority\": \"URGENT\",\n  \"type\": \"BUG\",\n  \"category\": \"SOFTWARE\"\n}"
+      }
+    },
+    {
+      "_id": "req-ticket-2",
+      "colId": "ticket-engine-1234",
+      "containerId": "",
+      "name": "2. Get All Tickets",
+      "url": "http://localhost:4000/api/tickets",
+      "method": "GET",
+      "sortNum": 20000,
+      "headers": [],
+      "auth": { "type": "bearer", "bearer": "{{accessToken}}" }
+    },
+    {
+      "_id": "req-ticket-3",
+      "colId": "ticket-engine-1234",
+      "containerId": "",
+      "name": "3. Get Single Ticket (Timeline)",
+      "url": "http://localhost:4000/api/tickets/{{ticketId}}",
+      "method": "GET",
+      "sortNum": 30000,
+      "headers": [],
+      "auth": { "type": "bearer", "bearer": "{{accessToken}}" }
+    },
+    {
+      "_id": "req-ticket-4",
+      "colId": "ticket-engine-1234",
+      "containerId": "",
+      "name": "4. Update Status (Optimistic Lock)",
+      "url": "http://localhost:4000/api/tickets/{{ticketId}}/status",
+      "method": "PATCH",
+      "sortNum": 40000,
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "auth": { "type": "bearer", "bearer": "{{accessToken}}" },
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"status\": \"OPEN\",\n  \"version\": 1\n}"
+      }
+    },
+    {
+      "_id": "req-ticket-5",
+      "colId": "ticket-engine-1234",
+      "containerId": "",
+      "name": "5. Add Comment",
+      "url": "http://localhost:4000/api/tickets/{{ticketId}}/comments",
+      "method": "POST",
+      "sortNum": 50000,
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "auth": { "type": "bearer", "bearer": "{{accessToken}}" },
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"content\": \"We are looking into this issue immediately.\",\n  \"isInternal\": false\n}"
+      }
+    }
+  ]
+}
