@@ -52,6 +52,11 @@ class GeminiProvider implements LLMProvider {
       throw new Error('GEMINI_API_KEY is missing. Please configure your environment to use AI features.');
     }
 
+    console.log('\n[LLM Provider] Using Provider: GEMINI');
+    console.log(`[LLM Provider] Sending Prompt Length: ${prompt.length} chars`);
+    console.log('[LLM Provider] Prompt Preview:');
+    console.log(prompt.substring(0, 300) + '...');
+
     return withRetry(async () => {
       const response = await this.ai!.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -60,7 +65,13 @@ class GeminiProvider implements LLMProvider {
           temperature: 0.2,
         }
       });
-      return response.text || '';
+
+      const responseText = response.text || '';
+      console.log('\n[LLM Provider] Response Received. Length:', responseText.length);
+      console.log('--- GEMINI RESPONSE PREVIEW ---');
+      console.log(responseText.substring(0, 150) + '...');
+      console.log('-------------------------------\n');
+      return responseText;
     });
   }
 
@@ -86,6 +97,8 @@ class GeminiProvider implements LLMProvider {
       }
     `;
 
+    console.log('\n[LLM Provider] Using Provider: GEMINI (Classification)');
+
     return withRetry(async () => {
       const response = await this.ai!.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -99,7 +112,9 @@ class GeminiProvider implements LLMProvider {
 
       try {
         const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(jsonStr);
+        const parsed = JSON.parse(jsonStr);
+        console.log('[LLM Provider] Classification Result:', parsed);
+        return parsed;
       } catch (error) {
         console.error('[Gemini] Classification Parse Error:', error);
         return {

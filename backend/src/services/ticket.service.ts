@@ -96,8 +96,15 @@ export class TicketService {
    * into a single, unified, chronologically sorted timeline for the frontend.
    */
   async getTicketWithTimeline(ticketId: string) {
-    const ticket = await ticketRepository.findTicketById(ticketId);
+    let ticket = await ticketRepository.findTicketById(ticketId);
     if (!ticket) throw new NotFoundError('Ticket not found');
+
+    if (ticket.aiSummary && ticket.aiSummary.includes('[Mock AI Response]')) {
+      console.log(`\n[Ticket Service] Intercepted legacy mock summary for ticket ${ticketId}. Forcing AI regeneration...`);
+      const aiService = (await import('./ai.service')).default;
+      await aiService.processNewTicketBackground(ticketId);
+      ticket = await ticketRepository.findTicketById(ticketId) || ticket;
+    }
 
     const { comments, activities } = await ticketRepository.getTicketTimeline(ticketId);
 
