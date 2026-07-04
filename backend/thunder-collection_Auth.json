@@ -1,0 +1,98 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "Enjay HelpDesk Auth",
+  "collectionId": "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+  "dateExported": "2026-07-04T06:00:00.000Z",
+  "version": "1.2",
+  "folders": [],
+  "requests": [
+    {
+      "_id": "req-1",
+      "colId": "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      "containerId": "",
+      "name": "1. Register",
+      "url": "http://localhost:4000/api/auth/register",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2026-07-04T06:00:00.000Z",
+      "modified": "2026-07-04T06:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"testuser@enjay.com\",\n  \"password\": \"TestPassword123!\",\n  \"fullName\": \"Test User\"\n}",
+        "form": []
+      }
+    },
+    {
+      "_id": "req-2",
+      "colId": "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      "containerId": "",
+      "name": "2. Login",
+      "url": "http://localhost:4000/api/auth/login",
+      "method": "POST",
+      "sortNum": 20000,
+      "created": "2026-07-04T06:00:00.000Z",
+      "modified": "2026-07-04T06:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"testuser@enjay.com\",\n  \"password\": \"TestPassword123!\"\n}",
+        "form": []
+      }
+    },
+    {
+      "_id": "req-3",
+      "colId": "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      "containerId": "",
+      "name": "3. Get Profile (Requires Bearer)",
+      "url": "http://localhost:4000/api/auth/profile",
+      "method": "GET",
+      "sortNum": 30000,
+      "created": "2026-07-04T06:00:00.000Z",
+      "modified": "2026-07-04T06:00:00.000Z",
+      "headers": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{accessToken}}"
+      }
+    },
+    {
+      "_id": "req-4",
+      "colId": "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      "containerId": "",
+      "name": "4. Refresh Token (Requires Cookie)",
+      "url": "http://localhost:4000/api/auth/refresh-token",
+      "method": "POST",
+      "sortNum": 40000,
+      "created": "2026-07-04T06:00:00.000Z",
+      "modified": "2026-07-04T06:00:00.000Z",
+      "headers": []
+    },
+    {
+      "_id": "req-5",
+      "colId": "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      "containerId": "",
+      "name": "5. Logout",
+      "url": "http://localhost:4000/api/auth/logout",
+      "method": "POST",
+      "sortNum": 50000,
+      "created": "2026-07-04T06:00:00.000Z",
+      "modified": "2026-07-04T06:00:00.000Z",
+      "headers": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{accessToken}}"
+      }
+    }
+  ]
+}
