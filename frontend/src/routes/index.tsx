@@ -10,6 +10,7 @@ import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
 import Tickets from '@/pages/Tickets';
 import TicketDetails from '@/pages/TicketDetails';
+import CreateTicket from '@/pages/CreateTicket';
 import MyTickets from '@/pages/MyTickets';
 import Users from '@/pages/Users';
 import Profile from '@/pages/Profile';
@@ -51,6 +52,11 @@ export const router = createBrowserRouter([
           {
             path: '/my-tickets',
             element: <MyTickets />,
+          },
+          // Anyone authenticated can create a ticket
+          {
+            path: '/tickets/new',
+            element: <CreateTicket />,
           },
           {
             path: '/tickets/:id',

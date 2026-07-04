@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   ArrowLeft, Send, Lock, Clock, User, Tag as TagIcon,
-  AlertCircle, Paperclip, Bot, Sparkles, Copy, Calendar
+  AlertCircle, Paperclip, Bot, Sparkles, Copy, Calendar, Loader2
 } from 'lucide-react';
 
-import { useTicketTimeline } from '@/hooks/useTickets';
+import { useTicketTimeline, useUpdateTicketStatus, useAddComment } from '@/hooks/useTickets';
+import { useAuthStore } from '@/store/authStore';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,7 +17,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function TicketDetails() {
   const { id } = useParams<{ id: string }>();
+  const { user: currentUser } = useAuthStore();
+  const [commentContent, setCommentContent] = useState('');
+
   const { data, isLoading, isError } = useTicketTimeline(id!);
+  const updateStatusMutation = useUpdateTicketStatus();
+  const addCommentMutation = useAddComment();
 
   // Helper to extract initials for avatars
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || 'U';
@@ -54,6 +61,23 @@ export default function TicketDetails() {
 
   const { ticket, timeline } = data;
 
+  // Handlers for Mutations
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    updateStatusMutation.mutate({
+      id: ticket.id,
+      status: e.target.value,
+      version: ticket.version,
+    });
+  };
+
+  const handleAddComment = (isInternal: boolean) => {
+    if (!commentContent.trim()) return;
+    addCommentMutation.mutate(
+      { id: ticket.id, content: commentContent, isInternal },
+      { onSuccess: () => setCommentContent('') } // Clear text box on success
+    );
+  };
+
   return (
     <div className="space-y-6 pb-20">
       {/* ========================================== */}
@@ -78,6 +102,27 @@ export default function TicketDetails() {
             Created {format(new Date(ticket.createdAt), 'MMMM dd, yyyy h:mm a')}
           </div>
         </div>
+
+        {/* Status Mutator (Only for Agents/Admins) */}
+        {['ADMIN', 'MANAGER', 'ENGINEER'].includes(currentUser?.role || '') && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Change Status:</span>
+            <select
+              disabled={updateStatusMutation.isPending}
+              value={ticket.status}
+              onChange={handleStatusChange}
+              className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+            >
+              <option value="NEW">New</option>
+              <option value="OPEN">Open</option>
+              <option value="PENDING">Pending</option>
+              <option value="ON_HOLD">On Hold</option>
+              <option value="RESOLVED">Resolved</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+            {updateStatusMutation.isPending && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -215,14 +260,17 @@ export default function TicketDetails() {
             })}
           </div>
 
-          {/* 4. REPLY BOX (UI Only) */}
-          {ticket.status !== 'CLOSED' && (
+          {/* 4. REPLY BOX */}
+          {ticket.status !== 'CLOSED' ? (
             <Card className="mt-8 border-primary/20 shadow-lg relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
               <CardContent className="p-6 space-y-4">
                 <Textarea
                   placeholder="Type your reply here..."
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
                   className="min-h-[140px] resize-y bg-background border-border text-base p-4 focus-visible:ring-primary/50"
+                  disabled={addCommentMutation.isPending}
                 />
 
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2 border-t border-border/50">
@@ -232,22 +280,32 @@ export default function TicketDetails() {
                   </button>
 
                   <div className="flex w-full sm:w-auto gap-3">
+                    {['ADMIN', 'MANAGER', 'ENGINEER'].includes(currentUser?.role || '') && (
+                      <button
+                        onClick={() => handleAddComment(true)}
+                        disabled={addCommentMutation.isPending || !commentContent.trim()}
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 text-sm font-semibold rounded-md hover:bg-amber-200 dark:hover:bg-amber-900/60 focus:outline-none transition-colors border border-amber-200 dark:border-amber-800 disabled:opacity-50"
+                      >
+                        {addCommentMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lock className="mr-2 h-4 w-4" />}
+                        Add Internal Note
+                      </button>
+                    )}
                     <button
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 text-sm font-semibold rounded-md hover:bg-amber-200 dark:hover:bg-amber-900/60 focus:outline-none transition-colors border border-amber-200 dark:border-amber-800"
+                      onClick={() => handleAddComment(false)}
+                      disabled={addCommentMutation.isPending || !commentContent.trim()}
+                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:bg-primary/90 focus:outline-none transition-colors shadow-sm disabled:opacity-50"
                     >
-                      <Lock className="mr-2 h-4 w-4" />
-                      Add Internal Note
-                    </button>
-                    <button
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:bg-primary/90 focus:outline-none transition-colors shadow-sm"
-                    >
-                      <Send className="mr-2 h-4 w-4" />
+                      {addCommentMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                       Post Public Reply
                     </button>
                   </div>
                 </div>
               </CardContent>
             </Card>
+          ) : (
+            <div className="bg-muted p-4 rounded-lg text-center text-muted-foreground text-sm flex items-center justify-center">
+              <Lock className="mr-2 h-4 w-4" /> This ticket is closed. No further replies can be added.
+            </div>
           )}
 
         </div>
@@ -268,7 +326,7 @@ export default function TicketDetails() {
                 <div className="p-4 flex flex-col gap-1">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assignee</span>
                   <div className="flex items-center gap-3 mt-1">
-                    <Avatar className="h-8 w-8 border border-border">
+                    <Avatar className="h-6 w-6 border border-border">
                       <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                         {getInitials(ticket.assignee?.fullName || '?')}
                       </AvatarFallback>
