@@ -2,7 +2,7 @@ import { TicketCategory, TicketPriority } from '@prisma/client';
 import { GoogleGenAI } from '@google/genai';
 
 export interface LLMProvider {
-  generateText(prompt: string): Promise<string>;
+  generateText(prompt: string, fastFail?: boolean): Promise<string>;
   generateClassification(title: string, description: string): Promise<{
     category: TicketCategory;
     priority: TicketPriority;
@@ -24,7 +24,17 @@ const extractRetryDelay = (errorMessage: string): number => {
   return 30000; // Default 30s
 };
 
-const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 1, timeoutMs = 15000): Promise<T> => {
+interface RetryOptions {
+  maxRetries?: number;
+  timeoutMs?: number;
+  fastFailOnRateLimit?: boolean;
+}
+
+const withRetry = async <T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> => {
+  const maxRetries = options.maxRetries ?? 1;
+  const timeoutMs = options.timeoutMs ?? 15000;
+  const fastFailOnRateLimit = options.fastFailOnRateLimit ?? false;
+
   let attempt = 0;
   while (attempt <= maxRetries) {
     try {
@@ -38,14 +48,21 @@ const withRetry = async <T>(fn: () => Promise<T>, maxRetries = 1, timeoutMs = 15
       const errorMessage = error.message || String(error);
       const isRateLimit = error.status === 429 || errorMessage.includes('429') || errorMessage.includes('RESOURCE_EXHAUSTED') || errorMessage.includes('Quota');
 
+      if (isRateLimit && fastFailOnRateLimit) {
+        const waitTime = extractRetryDelay(errorMessage);
+        const seconds = Math.round(waitTime / 1000);
+        throw new Error(`AI API is busy due to Free Tier quotas. Please wait ${seconds} seconds before trying again.`);
+      }
+
       if (attempt > maxRetries) {
         console.error(`[LLM Service] All ${maxRetries + 1} attempts failed.`);
         throw error;
       }
 
       if (isRateLimit) {
-        console.warn(`\n[LLM Service] Rate limit exceeded (429). Waiting 40 seconds before attempt ${attempt + 1}...`);
-        await delay(40000); // Wait 40s to clear the quota window
+        const waitTime = extractRetryDelay(errorMessage);
+        console.warn(`\n[LLM Service] Rate limit exceeded (429). Waiting ${Math.round(waitTime / 1000)} seconds before attempt ${attempt + 1}...`);
+        await delay(waitTime);
       } else {
         console.warn(`\n[LLM Service] Attempt ${attempt} failed: ${errorMessage}. Retrying in 2 seconds...`);
         await delay(2000);
@@ -70,15 +87,13 @@ class GeminiProvider implements LLMProvider {
     }
   }
 
-  async generateText(prompt: string): Promise<string> {
+  async generateText(prompt: string, fastFail = false): Promise<string> {
     if (!this.ai) {
       throw new Error('GEMINI_API_KEY is missing. Please configure your environment to use AI features.');
     }
 
     console.log('\n[LLM Provider] Using Provider: GEMINI');
     console.log(`[LLM Provider] Sending Prompt Length: ${prompt.length} chars`);
-    console.log('[LLM Provider] Prompt Preview:');
-    console.log(prompt.substring(0, 300) + '...');
 
     return withRetry(async () => {
       const response = await this.ai!.models.generateContent({
@@ -90,12 +105,9 @@ class GeminiProvider implements LLMProvider {
       });
 
       const responseText = response.text || '';
-      console.log('\n[LLM Provider] Response Received. Length:', responseText.length);
-      console.log('--- GEMINI RESPONSE PREVIEW ---');
-      console.log(responseText.substring(0, 150) + '...');
-      console.log('-------------------------------\n');
+      console.log(`[LLM Provider] Response Received. Length: ${responseText.length}`);
       return responseText;
-    });
+    }, { fastFailOnRateLimit: fastFail, maxRetries: 1 });
   }
 
   async generateClassification(title: string, description: string): Promise<any> {
@@ -148,7 +160,7 @@ class GeminiProvider implements LLMProvider {
           reason: 'Failed to parse AI classification',
         };
       }
-    });
+    }, { maxRetries: 2 });
   }
 }
 
@@ -156,7 +168,7 @@ class GeminiProvider implements LLMProvider {
 // 2. OpenAI Provider Implementation (Example Shell)
 // ---------------------------------------------------------
 class OpenAIProvider implements LLMProvider {
-  async generateText(_prompt: string): Promise<string> {
+  async generateText(_prompt: string, _fastFail?: boolean): Promise<string> {
     throw new Error('OpenAI Provider not fully implemented in this shell');
   }
   async generateClassification(_title: string, _description: string): Promise<any> {
@@ -168,7 +180,7 @@ class OpenAIProvider implements LLMProvider {
 // 3. Ollama Provider Implementation (Local LLM)
 // ---------------------------------------------------------
 class OllamaProvider implements LLMProvider {
-  async generateText(_prompt: string): Promise<string> {
+  async generateText(_prompt: string, _fastFail?: boolean): Promise<string> {
     throw new Error('Ollama Provider not fully implemented in this shell');
   }
   async generateClassification(_title: string, _description: string): Promise<any> {
@@ -198,8 +210,8 @@ export class LLMService {
     }
   }
 
-  async generateText(prompt: string): Promise<string> {
-    return this.provider.generateText(prompt);
+  async generateText(prompt: string, fastFail = false): Promise<string> {
+    return this.provider.generateText(prompt, fastFail);
   }
 
   async generateClassification(title: string, description: string) {

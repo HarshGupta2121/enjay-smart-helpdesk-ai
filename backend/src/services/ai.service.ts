@@ -69,7 +69,7 @@ export class AIService {
     `;
 
     const start = Date.now();
-    const draft = await llmService.generateText(prompt);
+    const draft = await llmService.generateText(prompt, true); // true = fastFailOnRateLimit
     const end = Date.now();
 
     console.log(`
