@@ -1,4 +1,5 @@
 import { TicketCategory, TicketPriority } from '@prisma/client';
+import { GoogleGenAI } from '@google/genai';
 
 export interface LLMProvider {
   generateText(prompt: string): Promise<string>;
@@ -86,12 +87,65 @@ class OpenAIProvider implements LLMProvider {
 // 3. Gemini Provider Implementation (Example Shell)
 // ---------------------------------------------------------
 class GeminiProvider implements LLMProvider {
-  async generateText(prompt: string): Promise<string> {
-    // In production: await google.generativeai.generateContent({...})
-    throw new Error('Gemini Provider not fully implemented in this shell');
+  private ai: GoogleGenAI;
+
+  constructor() {
+    this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
   }
+
+  async generateText(prompt: string): Promise<string> {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not defined in the environment.');
+    }
+    const response = await this.ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+    return response.text || '';
+  }
+
   async generateClassification(title: string, description: string): Promise<any> {
-    throw new Error('Gemini Provider not fully implemented in this shell');
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY is not defined in the environment.');
+    }
+
+    const prompt = `
+      Analyze the following support ticket and classify it into specific parameters.
+      Respond ONLY with a valid JSON object. Do not use Markdown formatting for the JSON block.
+
+      Ticket Title: ${title}
+      Ticket Description: ${description}
+
+      Return a JSON object with this exact structure:
+      {
+        "category": "SOFTWARE" | "HARDWARE" | "NETWORK" | "ACCOUNT" | "EMAIL" | "SECURITY" | "OTHER",
+        "priority": "LOW" | "MEDIUM" | "HIGH" | "URGENT" | "CRITICAL",
+        "sentiment": "HAPPY" | "NEUTRAL" | "FRUSTRATED" | "ANGRY" | "PANICKED",
+        "confidence": <number between 0 and 100>,
+        "reason": "Brief one sentence explanation for this classification"
+      }
+    `;
+
+    const response = await this.ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    const text = response.text || '{}';
+
+    try {
+      const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      return JSON.parse(jsonStr);
+    } catch (error) {
+      console.error('[Gemini] Classification Parse Error:', error);
+      return {
+        category: TicketCategory.OTHER,
+        priority: TicketPriority.MEDIUM,
+        sentiment: 'NEUTRAL',
+        confidence: 0,
+        reason: 'Failed to parse AI classification',
+      };
+    }
   }
 }
 
