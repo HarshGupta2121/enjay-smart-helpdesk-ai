@@ -64,9 +64,12 @@ export class UserService {
     if (!role) throw new BadRequestError('Invalid role code');
 
     const passwordHash = await bcrypt.hash(data.password, 10);
+    
+    // Strip out the raw 'password' and 'role' string before passing to Prisma
+    const { password, role: roleCode, ...validData } = data;
 
     return userRepository.createUser({
-      ...data,
+      ...validData,
       passwordHash,
       role: { connect: { id: role.id } }
     });
