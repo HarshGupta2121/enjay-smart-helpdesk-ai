@@ -1,36 +1,14 @@
 import ticketRepository from '../repositories/ticket.repository';
+import routingService from './routing.service';
 import { isValidTransition } from '../utils/ticketStateMachine';
 import { BadRequestError, NotFoundError } from '../utils/errors';
 import { Prisma, TicketStatus, TicketPriority } from '@prisma/client';
 
 export class TicketService {
   /**
-   * Helper: Calculates baseline SLAs. In an enterprise system, this connects to
-   * a complex business-hours and tier matrix.
-   */
-  private calculateSLAs(priority: TicketPriority) {
-    const now = new Date();
-    let firstResponseHours = 4;
-    let resolutionHours = 24;
-
-    if (priority === 'URGENT') {
-      firstResponseHours = 1;
-      resolutionHours = 4;
-    } else if (priority === 'CRITICAL') {
-      firstResponseHours = 0.5; // 30 mins
-      resolutionHours = 2;
-    }
-
-    return {
-      firstResponseDueAt: new Date(now.getTime() + firstResponseHours * 60 * 60 * 1000),
-      resolutionDueAt: new Date(now.getTime() + resolutionHours * 60 * 60 * 1000),
-    };
-  }
-
-  /**
    * 1. createTicket
-   * Creates a new ticket, assigns SLAs based on priority, delegates sequential ticket
-   * number generation to the repository, and creates the genesis 'TICKET_CREATED' activity.
+   * Creates a new ticket, logs the genesis activity, and immediately hands it off
+   * to the Routing Service for Team Queue assignment and SLA calculation.
    */
   async createTicket(
     data: Omit<Prisma.TicketCreateInput, 'ticketNumber' | 'requester'>,
@@ -39,14 +17,12 @@ export class TicketService {
     userAgent?: string
   ) {
     const priority = (data.priority as TicketPriority) || 'MEDIUM';
-    const slas = this.calculateSLAs(priority);
 
     // Repository handles atomic ticket number generation via TicketSequence table
     const ticket = await ticketRepository.createTicket({
       ...data,
+      priority,
       requester: { connect: { id: requesterId } },
-      firstResponseDueAt: slas.firstResponseDueAt,
-      resolutionDueAt: slas.resolutionDueAt,
     });
 
     // Write genesis audit activity
@@ -59,7 +35,10 @@ export class TicketService {
       current: { status: ticket.status, priority: ticket.priority },
     });
 
-    return ticket;
+    // Delegate to Routing Service (Handles Teams, Queues, Auto-Assignment, and SLAs)
+    const routedTicket = await routingService.routeNewTicket(ticket as any);
+
+    return routedTicket;
   }
 
   /**

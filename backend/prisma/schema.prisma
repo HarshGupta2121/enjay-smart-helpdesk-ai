@@ -69,6 +69,21 @@ enum TicketCategory {
   OTHER
 }
 
+// Team Routing Enums
+enum TeamRole {
+  MANAGER
+  LEAD
+  ENGINEER
+  AGENT
+}
+
+enum AssignmentStrategy {
+  MANUAL
+  ROUND_ROBIN
+  LEAST_ACTIVE
+  LEAST_OPEN
+}
+
 // ==========================================
 //               AUTH / USERS
 // ==========================================
@@ -123,6 +138,7 @@ model User {
   activities                 TicketActivity[]
   watching                   TicketWatcher[]
   uploadedAttachments        Attachment[]
+  teamMemberships            TeamMember[]
 
   @@index([roleId])
   @@map("users")
@@ -168,6 +184,73 @@ model AuditLog {
 }
 
 // ==========================================
+//          TEAM & ROUTING MODULE
+// ==========================================
+
+model Team {
+  id          String    @id @default(uuid())
+  name        String    @unique // e.g. "Billing", "IT Support", "HR"
+  description String?
+
+  members     TeamMember[]
+  queues      Queue[]
+  tickets     Ticket[]
+  settings    TeamSettings?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@map("teams")
+}
+
+model TeamSettings {
+  id                  String             @id @default(uuid())
+  teamId              String             @unique
+  team                Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  assignmentStrategy  AssignmentStrategy @default(MANUAL)
+
+  // Custom SLA Policies per team
+  firstResponseSlaHrs Float              @default(4)
+  resolutionSlaHrs    Float              @default(24)
+
+  @@map("team_settings")
+}
+
+model TeamMember {
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role        TeamRole  @default(AGENT)
+
+  createdAt   DateTime  @default(now())
+
+  @@id([teamId, userId])
+  @@map("team_members")
+}
+
+model Queue {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  tickets     Ticket[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([teamId, name])
+  @@map("queues")
+}
+
+// ==========================================
 //              TICKET ENGINE
 // ==========================================
 
@@ -182,7 +265,6 @@ model TicketSequence {
 
 model Ticket {
   id                  String         @id @default(uuid())
-  // Generated using TicketSequence: e.g. HD-2026-000001
   ticketNumber        String         @unique
 
   title               String
@@ -194,7 +276,6 @@ model Ticket {
   type                TicketType     @default(QUESTION)
   category            TicketCategory @default(OTHER)
 
-  // Optimistic Locking to prevent concurrent update anomalies
   version             Int            @default(1)
 
   // Relationships
@@ -203,6 +284,13 @@ model Ticket {
 
   assigneeId          String?
   assignee            User?          @relation("AssignedTickets", fields: [assigneeId], references: [id])
+
+  // Routing Context
+  teamId              String?
+  team                Team?          @relation(fields: [teamId], references: [id])
+
+  queueId             String?
+  queue               Queue?         @relation(fields: [queueId], references: [id])
 
   // SLAs & Timestamps
   firstResponseAt     DateTime?
@@ -237,6 +325,8 @@ model Ticket {
   @@index([category])
   @@index([requesterId])
   @@index([assigneeId])
+  @@index([teamId])
+  @@index([queueId])
   @@index([createdAt])
   @@index([updatedAt])
   @@map("tickets")
