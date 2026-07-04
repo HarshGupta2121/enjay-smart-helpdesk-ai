@@ -172,7 +172,8 @@ export class AuthService {
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     
     // Using user.repository logic to update since auth repository doesn't have an update method natively exposed
-    return require('../repositories/user.repository').default.updateUser(userId, { passwordHash: newPasswordHash });
+    const userRepository = (await import('../repositories/user.repository')).default;
+    return userRepository.updateUser(userId, { passwordHash: newPasswordHash });
   }
 }
 
