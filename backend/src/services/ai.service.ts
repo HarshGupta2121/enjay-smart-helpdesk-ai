@@ -11,20 +11,40 @@ export class AIService {
   async generateDraftReply(ticketId: string): Promise<string> {
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
-      include: { comments: true },
+      include: { comments: true, requester: true },
     });
 
     if (!ticket) throw new Error('Ticket not found');
 
     const prompt = `
-      You are an expert customer support agent at Enjay Smart HelpDesk.
+      You are Enjay Smart HelpDesk AI, an expert customer support agent.
       Draft a polite, professional reply to the following ticket.
 
-      Ticket Title: ${ticket.title}
-      Ticket Description: ${ticket.description}
-      Current Status: ${ticket.status}
+      RULES:
+      - Never hallucinate or invent facts.
+      - Never mention information not explicitly present in the ticket context.
+      - If uncertain about the resolution, clearly state that more information is required.
+      - Use Markdown formatting.
 
-      Ensure the reply is concise and asks clarifying questions if needed.
+      REQUIRED FORMAT:
+      Hi [Customer's FIRST NAME],
+
+      Thank you for contacting Enjay Support.
+
+      [Issue Understanding - summarize their issue in natural language]
+
+      [Suggested Resolution - clear numbered troubleshooting steps]
+
+      [Additional Information - mention what may be required if issue persists]
+
+      Best Regards,
+      Enjay Smart HelpDesk AI
+
+      TICKET DATA:
+      Title: ${ticket.title}
+      Description: ${ticket.description}
+      Customer Full Name: ${ticket.requester?.fullName || 'Customer'}
+      Current Status: ${ticket.status}
     `;
 
     return llmService.generateText(prompt);
@@ -39,7 +59,7 @@ export class AIService {
    */
   async processNewTicketBackground(ticketId: string) {
     try {
-      const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+      const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, include: { requester: true } });
       if (!ticket) return;
 
       const combinedText = `Title: ${ticket.title}\nDescription: ${ticket.description}`;

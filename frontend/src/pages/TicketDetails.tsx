@@ -165,9 +165,24 @@ export default function TicketDetails() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-foreground/90 leading-relaxed">
-                {ticket.aiSummary || "This ticket appears to be related to hardware failure based on the crash reports attached. The sentiment is highly frustrated."}
-              </p>
+              <div className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                {ticket.aiSummary || `## Ticket Summary
+
+**Customer:**
+Unknown
+
+**Issue:**
+Unable to determine issue.
+
+**Possible Cause:**
+More information required
+
+**Recommended Action:**
+More information required
+
+**Priority:**
+Unknown`}
+              </div>
 
               <div className="flex flex-wrap gap-4 pt-2 border-t border-indigo-200/50 dark:border-indigo-800/50">
                 <div>

@@ -16,7 +16,46 @@ export interface LLMProvider {
 // ---------------------------------------------------------
 class MockLLMProvider implements LLMProvider {
   async generateText(prompt: string): Promise<string> {
-    return `[Mock AI Response]: Based on the provided context, the user is experiencing technical difficulties. We recommend checking the system logs.`;
+    if (prompt.includes('## Ticket Summary')) {
+      return `## Ticket Summary
+
+**Customer:**
+Alice
+
+**Issue:**
+User is unable to access the billing portal and is receiving a 404 error page.
+
+**Possible Cause:**
+More information required (Likely a routing issue or an expired session token).
+
+**Recommended Action:**
+1. Clear browser cache and cookies.
+2. Attempt logging in using an Incognito window.
+3. Check internal routing logs for the billing service.
+
+**Priority:**
+High`;
+    }
+    
+    if (prompt.includes("Hi [Customer's FIRST NAME]")) {
+      return `Hi Alice,
+
+Thank you for contacting Enjay Support.
+
+I understand you are experiencing a 404 error when trying to access the billing portal. I apologize for the inconvenience this is causing.
+
+To help us resolve this quickly, please try the following troubleshooting steps:
+1. Clear your browser's cache and cookies.
+2. Attempt to access the portal using an Incognito or Private browsing window.
+3. Verify if you are connected to the company VPN.
+
+If the issue persists, please reply to this ticket with your browser version and a screenshot of the error, so our engineering team can investigate further.
+
+Best Regards,
+Enjay Smart HelpDesk AI`;
+    }
+
+    return `[Mock AI Response]: Based on the provided context, the user is experiencing technical difficulties.`;
   }
 
   async generateClassification(title: string, description: string) {

@@ -5,6 +5,14 @@ All notable changes to the Enjay Smart HelpDesk AI project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-07-04 (AI Prompt Optimization Sprint)
+
+### Added
+- **Deterministic AI Prompts**: Replaced single-sentence LLM instructions with robust enterprise system prompts preventing hallucinations and explicitly extracting first-name identities.
+- **Markdown Reply Structure**: Enforced a strict 5-part architecture (Greeting, Issue Understanding, Suggested Resolution, Additional Info, Signature) for AI Copilot draft replies.
+- **Markdown Summary Structure**: Refactored the background AI ticket analysis to emit structured Markdown indicating Root Causes, Recommended Actions, and Priority alignment.
+- **Frontend Markdown Formatting**: Upgraded `TicketDetails.tsx` to leverage `whitespace-pre-wrap` rendering ensuring LLM-generated structural spacing parses correctly in the UI.
+
 ## [1.8.0] - 2026-07-04 (RBAC & Profile Management Sprint)
 
 ### Added
