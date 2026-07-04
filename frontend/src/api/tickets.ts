@@ -30,13 +30,3 @@ export const fetchTicketTimeline = async (id: string) => {
   const response = await api.get(`/tickets/${id}`);
   return response.data.data;
 };
-
-export const updateTicketStatus = async ({ id, status, version }: { id: string; status: string; version: number }) => {
-  const response = await api.patch(`/tickets/${id}/status`, { status, version });
-  return response.data.data;
-};
-
-export const addTicketComment = async ({ id, content, isInternal }: { id: string; content: string; isInternal: boolean }) => {
-  const response = await api.post(`/tickets/${id}/comments`, { content, isInternal });
-  return response.data.data;
-};
