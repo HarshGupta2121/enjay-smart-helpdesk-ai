@@ -5,6 +5,13 @@ All notable changes to the Enjay Smart HelpDesk AI project will be documented in
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-07-04 (Users Management UI Sprint)
+
+### Added
+- **Add New User Workflow**: Fully integrated a native Shadcn Dialog supporting secure `POST /api/users` transactions with strict Zod validation on passwords and emails.
+- **Edit User Workflow**: Pre-fills the modal and executes concurrent optimistic `PATCH` updates for `fullName`, `role`, and `isActive` statuses.
+- **React Query Persistence**: Connected the UI mutators directly to the global cache, guaranteeing instant data-table refreshes without hard reloads.
+
 ## [1.5.0] - 2026-07-04 (Users Management & RBAC Sprint)
 
 ### Added

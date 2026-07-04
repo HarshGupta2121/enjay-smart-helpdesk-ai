@@ -7,7 +7,8 @@ import {
   userSearchFilterSchema,
   updateUserSchema,
   updateUserRoleSchema,
-  updateUserStatusSchema
+  updateUserStatusSchema,
+  createUserSchema
 } from '../validators/user.validator';
 
 const router = Router();
@@ -64,5 +65,16 @@ router.patch('/:id/role', requireRole(['ADMIN']), validate(updateUserRoleSchema)
  *       - bearerAuth: []
  */
 router.patch('/:id/status', validate(updateUserStatusSchema), asyncHandler(userController.updateUserStatus));
+
+
+/**
+ * @swagger
+ * /api/users:
+ *   post:
+ *     summary: Create a new user
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/', requireRole(['ADMIN']), validate(createUserSchema), asyncHandler(userController.createUser));
 
 export default router;

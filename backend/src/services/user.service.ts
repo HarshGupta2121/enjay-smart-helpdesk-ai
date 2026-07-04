@@ -1,5 +1,6 @@
 import userRepository from '../repositories/user.repository';
-import { NotFoundError, BadRequestError } from '../utils/errors';
+import { NotFoundError, BadRequestError, ConflictError } from '../utils/errors';
+import bcrypt from 'bcrypt';
 
 export class UserService {
   async getUsers(filters: { search?: string; role?: string; page?: number; limit?: number }) {
@@ -51,6 +52,24 @@ export class UserService {
     if (!user) throw new NotFoundError('User not found');
 
     return userRepository.updateUser(id, { isActive });
+  }
+
+  async createUser(data: { fullName: string; email: string; password: string; role: string; isActive: boolean }) {
+    const existingUser = await userRepository.findUsers({ search: data.email, page: 1, limit: 1 });
+    if (existingUser.users.find(u => u.email === data.email)) {
+      throw new ConflictError('User with this email already exists');
+    }
+
+    const role = await userRepository.findRoleByCode(data.role);
+    if (!role) throw new BadRequestError('Invalid role code');
+
+    const passwordHash = await bcrypt.hash(data.password, 10);
+
+    return userRepository.createUser({
+      ...data,
+      passwordHash,
+      role: { connect: { id: role.id } }
+    });
   }
 }
 

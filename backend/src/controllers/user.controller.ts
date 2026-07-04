@@ -42,6 +42,11 @@ export class UserController {
     const user = await userService.updateUserStatus(id, isActive);
     return sendSuccess(res, StatusCodes.OK, 'User status updated successfully', { user });
   };
+
+  public createUser = async (req: Request, res: Response) => {
+    const user = await userService.createUser(req.body);
+    return sendSuccess(res, StatusCodes.CREATED, 'User created successfully', { user });
+  };
 }
 
 export default new UserController();

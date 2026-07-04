@@ -73,6 +73,21 @@ export class UserRepository {
     });
   }
 
+  async createUser(data: Prisma.UserCreateInput) {
+    return prisma.user.create({
+      data,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        avatar: true,
+        isActive: true,
+        createdAt: true,
+        role: { select: { id: true, code: true, name: true } }
+      }
+    });
+  }
+
   async findRoleByCode(code: string) {
     return prisma.role.findUnique({ where: { code } });
   }
