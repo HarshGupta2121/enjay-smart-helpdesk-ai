@@ -9,6 +9,13 @@ export interface FetchTicketsParams {
   search?: string;
 }
 
+export interface SimilarTicket {
+  id: string;
+  ticketNumber: string;
+  title: string;
+  similarityScore: number;
+}
+
 export interface TicketResponse {
   id: string;
   ticketNumber: string;
@@ -50,4 +57,14 @@ export const updateTicketStatus = async ({ id, status, version }: { id: string; 
 export const addTicketComment = async ({ id, content, isInternal }: { id: string; content: string; isInternal: boolean }) => {
   const response = await api.post(`/tickets/${id}/comments`, { content, isInternal });
   return response.data.data;
+};
+
+export const fetchSimilarTickets = async (id: string): Promise<SimilarTicket[]> => {
+  const response = await api.get(`/tickets/${id}/similar`);
+  return response.data.data;
+};
+
+export const generateAiReply = async (id: string): Promise<string> => {
+  const response = await api.post(`/tickets/${id}/ai/reply`);
+  return response.data.data.draft;
 };

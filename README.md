@@ -1,46 +1,85 @@
 # Enjay Smart HelpDesk AI
 
-A production-ready SaaS application foundation.
-
-## Tech Stack
-- **Frontend**: React, Vite, TypeScript, TailwindCSS, shadcn/ui, React Query
-- **Backend**: Node.js, Express, TypeScript, Prisma, PostgreSQL
-- **Tooling**: ESLint, Prettier, npm workspaces, Docker
+A production-ready Enterprise SaaS HelpDesk application built with modern architecture and AI readiness.
 
 ## Project Structure
-This repository uses npm workspaces for a monorepo setup:
-- `/frontend` - React application (Vite)
-- `/backend` - Express API server
+This repository utilizes an npm workspaces monorepo architecture:
+- `/frontend` - React application (Vite, TailwindCSS, shadcn/ui, Zustand, React Query)
+- `/backend`  - Express API server (Node.js, Prisma, PostgreSQL, Zod, Pino)
+
+## Current Implemented Features
+
+### 1. Enterprise Authentication Engine
+- Highly secure registration and login via standard JWT structure.
+- **Refresh Token Rotation**: Automatic token refresh seamlessly handled by Axios interceptors avoiding 401 logouts.
+- **Security Context**: Cryptographically generated Refresh Tokens are stored natively as hashed `SHA-256` tokens in PostgreSQL avoiding complete compromise during DB breaches.
+- **Role-Based Access Control (RBAC)**: Centralized backend middleware enforcing roles (`ADMIN`, `MANAGER`, `ENGINEER`, `CUSTOMER`) protecting API surfaces.
+- **Security Mitigations**: Native `HttpOnly`, `Secure`, and `SameSite` cookies.
+
+### 2. Core Ticket Engine (Backend)
+- Robust strict-mode **State Machine** restricting ticket transitions (e.g. `NEW -> RESOLVED`, catching invalid paths like `NEW -> CLOSED`).
+- **Concurrency / Optimistic Locking**: A native locking mechanism protecting tickets from being overwritten simultaneously by different agents.
+- **Sequential Ticketing**: Atomic database-driven `TicketSequence` generation ensuring collision-free human readable IDs (e.g., `HD-2026-000001`).
+- **SLA Generation & Auto-Fulfillment**: Engine dynamically attaches SLA deadlines based on priorities and automatically fulfills `firstResponseTime` upon initial agent replies.
+- **Unified Timeline Event Sourcing**: Every comment, attachment, and systemic change strictly emits a chronological `TicketActivity` audit log.
+
+### 3. Team Routing & Auto-Assignment (Backend)
+- **Dynamic Queues**: Support for discrete Teams (Billing, IT Support) and unlimited Sub-Queues.
+- **Auto-Assignment Strategies**: The Routing Service analyzes incoming categories and automatically assigns the best agent utilizing advanced strategies (`ROUND_ROBIN`, `LEAST_ACTIVE`, `LEAST_OPEN`).
+- **Custom SLAs**: Individual teams possess isolated, overriding metrics for First Response and Resolution Service Level Agreements.
+
+### 4. AI Intelligence Layer
+- **Pluggable Architecture**: Supports hot-swapping between `OPENAI`, `GEMINI`, and local `OLLAMA` providers via Strategy patterns.
+- **Asynchronous Processing**: Background workers generate 1-sentence summaries and classify priority, category, and sentiment dynamically upon ticket creation.
+- **Duplicate Ticket Detection**: Natively supports semantic matching via `pgvector` operators to detect duplicate outages across the platform with automatic in-memory fallbacks for local dev environments.
+- **Agent Copilot**: Exposes `/ai/reply` to draft immediate, context-aware responses to user queries.
+
+### 5. Frontend Foundation & Dashboards
+- Zustand global persistence for active user sessions.
+- Comprehensive Dark/Light/System theme toggling integration via Tailwind.
+- **Enterprise HelpDesk Overview**: A responsive top-level dashboard with active queue cards (Total, Open, Pending, Urgent) and a functional search and status/priority-filtered Ticket List table rendering skeleton states during data fetches.
+- **Ticket Details UI**: A rich Jira-like unified chronological timeline stacking comments against system audit logs securely formatted alongside interactive AI cards and intelligent SLA timers.
+- **Interactive Mutators**: Connected React Query endpoints for instant, optimistic status updates, public replies, and internal team notes.
+- **AI Copilot Integration**: Agent-facing draft generator and editor directly inside the ticket workspace.
+
+## Screenshots
+
+*(Coming Soon: Add screenshots of the dark mode Dashboard and Ticket Details timeline here)*
+
+## Sprint History
+- **Sprint 1**: Project Foundation (Monorepo, ESLint, Prisma schema, Docker initialization).
+- **Sprint 2**: Authentication Sprint (JWT, Refresh Tokens, Bcrypt, Role schema, Zod, Security Audit & Hardening).
+- **Sprint 3**: Backend Ticket Engine (Optimistic locking, Timeline merge, Event Sourcing, SLAs, Automated End-to-End Tests).
+- **Sprint 4**: Frontend Foundation (React Router layout, Axios interceptors, Zustand auth store).
+- **Sprint 5**: Enterprise Dashboard Overview (Data Tables, server-side pagination layout, unified filters).
+- **Sprint 6**: Ticket Details UI (Unified timeline mapping, AI analysis cards, SLA sidebar, pure front-end mock layout without active mutations).
+- **Sprint 7**: Backend Team & Routing Module (Team Queues, Round-Robin Auto-Assignment, `LEAST_OPEN` strategies).
+- **Sprint 8**: AI Intelligence Sprint (Pluggable LLM, pgvector Duplicate Detection, Automatic Summarization).
+- **Sprint 9**: AI Copilot Frontend (React Query integrations, Editable Drafts, Similar Ticket UI, Semantic layout updates).
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js (v20+)
-- npm (v10+)
-- Docker & Docker Compose
+- PostgreSQL 17/18 (Running locally on port 5432)
 
 ### Environment Setup
-1. Copy the environment variables examples in both apps:
-   - `cp backend/.env.example backend/.env`
-   - `cp frontend/.env.example frontend/.env`
-
-2. Start the PostgreSQL database:
-   ```bash
-   docker-compose up -d
-   ```
-
-3. Install dependencies:
+1. Copy the `.env.example` files to `.env` in both `/frontend` and `/backend`.
+2. Install monorepo dependencies:
    ```bash
    npm install
    ```
-
-4. Run Prisma database migrations:
+3. Sync database migrations:
    ```bash
-   npm run db:push
+   npm run db:push --workspace=backend
+   ```
+4. Seed administrative roles:
+   ```bash
+   npm run db:seed --workspace=backend
    ```
 
 ### Development
-Start the development servers for both frontend and backend concurrently:
+Start the full stack environment natively concurrently:
 ```bash
 npm run dev
 ```

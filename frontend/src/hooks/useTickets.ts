@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchTickets, FetchTicketsParams, fetchTicketTimeline, updateTicketStatus, addTicketComment, createTicket } from '@/api/tickets';
+import { fetchTickets, FetchTicketsParams, fetchTicketTimeline, updateTicketStatus, addTicketComment, createTicket, generateAiReply, fetchSimilarTickets } from '@/api/tickets';
 import { toast } from 'sonner';
 
 export const useTickets = (params: FetchTicketsParams) => {
@@ -14,6 +14,14 @@ export const useTicketTimeline = (id: string) => {
   return useQuery({
     queryKey: ['ticketTimeline', id],
     queryFn: () => fetchTicketTimeline(id),
+    enabled: !!id,
+  });
+};
+
+export const useSimilarTickets = (id: string) => {
+  return useQuery({
+    queryKey: ['similarTickets', id],
+    queryFn: () => fetchSimilarTickets(id),
     enabled: !!id,
   });
 };
@@ -63,6 +71,21 @@ export const useAddComment = () => {
     },
     onError: (error: any) => {
       const msg = error.response?.data?.message || 'Failed to post comment';
+      toast.error(msg);
+    },
+  });
+};
+
+export const useGenerateAiReply = () => {
+  return useMutation({
+    mutationFn: generateAiReply,
+    onSuccess: () => {
+      toast.success('AI Draft Generated', {
+        description: 'Review the draft before sending.'
+      });
+    },
+    onError: (error: any) => {
+      const msg = error.response?.data?.message || 'Failed to generate AI reply';
       toast.error(msg);
     },
   });

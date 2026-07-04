@@ -3,10 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   ArrowLeft, Send, Lock, Clock, User, Tag as TagIcon,
-  AlertCircle, Paperclip, Bot, Sparkles, Copy, Calendar, Loader2
+  AlertCircle, Paperclip, Bot, Sparkles, Copy, Calendar, Loader2,
+  RefreshCw, ArrowDownToLine
 } from 'lucide-react';
 
-import { useTicketTimeline, useUpdateTicketStatus, useAddComment } from '@/hooks/useTickets';
+import { useTicketTimeline, useUpdateTicketStatus, useAddComment, useGenerateAiReply, useSimilarTickets } from '@/hooks/useTickets';
 import { useAuthStore } from '@/store/authStore';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,10 +20,13 @@ export default function TicketDetails() {
   const { id } = useParams<{ id: string }>();
   const { user: currentUser } = useAuthStore();
   const [commentContent, setCommentContent] = useState('');
+  const [aiDraft, setAiDraft] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useTicketTimeline(id!);
+  const { data: similarTicketsData, isLoading: similarLoading } = useSimilarTickets(id!);
   const updateStatusMutation = useUpdateTicketStatus();
   const addCommentMutation = useAddComment();
+  const generateAiMutation = useGenerateAiReply();
 
   // Helper to extract initials for avatars
   const getInitials = (name: string) => name?.substring(0, 2).toUpperCase() || 'U';
@@ -76,6 +80,27 @@ export default function TicketDetails() {
       { id: ticket.id, content: commentContent, isInternal },
       { onSuccess: () => setCommentContent('') } // Clear text box on success
     );
+  };
+
+  const handleGenerateAiReply = () => {
+    generateAiMutation.mutate(ticket.id, {
+      onSuccess: (draft) => {
+        setAiDraft(draft);
+      },
+    });
+  };
+
+  const handleCopyDraft = () => {
+    if (aiDraft) {
+      navigator.clipboard.writeText(aiDraft);
+    }
+  };
+
+  const handleInsertDraft = () => {
+    if (aiDraft) {
+      setCommentContent((prev) => prev ? `${prev}\n\n${aiDraft}` : aiDraft);
+      setAiDraft(null);
+    }
   };
 
   return (
@@ -147,21 +172,51 @@ export default function TicketDetails() {
               <div className="flex flex-wrap gap-4 pt-2 border-t border-indigo-200/50 dark:border-indigo-800/50">
                 <div>
                   <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Suggested Priority</p>
-                  <Badge variant="outline" className="text-xs bg-background border-indigo-200 dark:border-indigo-800">{ticket.aiPriority || 'URGENT'} (94% Match)</Badge>
+                  <Badge variant="outline" className="text-xs bg-background border-indigo-200 dark:border-indigo-800">{ticket.aiPriority || 'N/A'}</Badge>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Suggested Category</p>
-                  <Badge variant="outline" className="text-xs bg-background border-indigo-200 dark:border-indigo-800">HARDWARE</Badge>
+                  <Badge variant="outline" className="text-xs bg-background border-indigo-200 dark:border-indigo-800">{ticket.aiCategory || 'N/A'}</Badge>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Duplicate Check</p>
-                  <button className="flex items-center text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
-                    <Copy className="h-3 w-3 mr-1" /> View 2 Potential Duplicates
-                  </button>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Sentiment</p>
+                  <Badge variant="outline" className="text-xs bg-background border-indigo-200 dark:border-indigo-800">{ticket.aiSentiment || 'N/A'}</Badge>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Confidence Score</p>
+                  <Badge variant="outline" className="text-xs bg-background border-indigo-200 dark:border-indigo-800">{ticket.aiConfidence ? `${ticket.aiConfidence}%` : 'N/A'}</Badge>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {similarTicketsData && similarTicketsData.length > 0 && (
+            <Card className="shadow-sm border-amber-200/50 dark:border-amber-900/50">
+              <CardHeader className="bg-amber-50/50 dark:bg-amber-950/20 pb-3 border-b border-border">
+                <CardTitle className="text-sm font-semibold flex items-center text-amber-700 dark:text-amber-400">
+                  <Copy className="mr-2 h-4 w-4" /> Similar Tickets Detected
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {similarTicketsData.map((st: any) => (
+                    <div key={st.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{st.title}</p>
+                        <div className="flex items-center mt-1 gap-2">
+                          <Badge variant="outline" className="text-[10px]">{st.ticketNumber}</Badge>
+                          <span className="text-xs text-muted-foreground">Similarity: {st.similarityScore}%</span>
+                        </div>
+                      </div>
+                      <Link to={`/tickets/${st.id}`} className="text-xs font-medium text-primary hover:underline" aria-label={`Open similar ticket ${st.ticketNumber}`}>
+                        Open Ticket
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Original Ticket Description */}
           <Card className="shadow-sm">
@@ -260,7 +315,79 @@ export default function TicketDetails() {
             })}
           </div>
 
-          {/* 4. REPLY BOX */}
+          {/* AI Draft Section */}
+          {(generateAiMutation.isPending || generateAiMutation.isError || aiDraft !== null) && (
+            <Card className="mt-4 border-indigo-200 dark:border-indigo-800/50 bg-indigo-50/30 dark:bg-indigo-950/10 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
+              <CardHeader className="py-3 px-4 border-b border-indigo-100 dark:border-indigo-900/50">
+                <CardTitle className="text-sm font-medium flex items-center text-indigo-700 dark:text-indigo-400">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  AI Generated Draft
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-4">
+                {generateAiMutation.isPending && (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                    <Skeleton className="h-4 w-4/6" />
+                  </div>
+                )}
+
+                {generateAiMutation.isError && (
+                  <div className="flex flex-col items-center justify-center p-4 text-center">
+                    <AlertCircle className="h-6 w-6 text-destructive mb-2" />
+                    <p className="text-sm text-foreground mb-3">Failed to generate AI reply.</p>
+                    <button
+                      onClick={handleGenerateAiReply}
+                      className="text-xs px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium transition-colors"
+                    >
+                      Retry Generation
+                    </button>
+                  </div>
+                )}
+
+                {aiDraft !== null && !generateAiMutation.isPending && !generateAiMutation.isError && (
+                  <>
+                    <Textarea
+                      value={aiDraft}
+                      onChange={(e) => setAiDraft(e.target.value)}
+                      className="min-h-[100px] resize-y bg-background border-indigo-200 dark:border-indigo-800 text-sm focus-visible:ring-indigo-500/50"
+                      aria-label="AI Generated Draft"
+                      title="Edit AI generated draft here"
+                    />
+                    <div className="flex items-center justify-between pt-2">
+                      <button
+                        onClick={handleGenerateAiReply}
+                        className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center"
+                        aria-label="Regenerate response"
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" /> Regenerate
+                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleCopyDraft}
+                          className="text-xs px-3 py-1.5 border border-border bg-background rounded-md hover:bg-muted font-medium transition-colors flex items-center"
+                          aria-label="Copy response"
+                        >
+                          <Copy className="h-3 w-3 mr-1" /> Copy
+                        </button>
+                        <button
+                          onClick={handleInsertDraft}
+                          className="text-xs px-3 py-1.5 bg-indigo-600 text-white dark:bg-indigo-700 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 font-medium transition-colors flex items-center"
+                          aria-label="Insert into editor"
+                        >
+                          <ArrowDownToLine className="h-3 w-3 mr-1" /> Insert
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 4. REPLY BOX (WIRED TO MUTATIONS) */}
           {ticket.status !== 'CLOSED' ? (
             <Card className="mt-8 border-primary/20 shadow-lg relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
@@ -270,20 +397,38 @@ export default function TicketDetails() {
                   value={commentContent}
                   onChange={(e) => setCommentContent(e.target.value)}
                   className="min-h-[140px] resize-y bg-background border-border text-base p-4 focus-visible:ring-primary/50"
-                  disabled={addCommentMutation.isPending}
+                  disabled={addCommentMutation.isPending || generateAiMutation.isPending}
                 />
 
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-2 border-t border-border/50">
-                  {/* Attachment Upload UI (Frontend Only) */}
-                  <button className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors p-2 rounded-md hover:bg-muted">
-                    <Paperclip className="h-4 w-4 mr-2" /> Attach files
-                  </button>
+                  {/* Left Side: Attachments and AI Copilot */}
+                  <div className="flex items-center gap-2">
+                    <button className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors p-2 rounded-md hover:bg-muted">
+                      <Paperclip className="h-4 w-4 mr-2" /> Attach files
+                    </button>
 
+                    {['ADMIN', 'MANAGER', 'ENGINEER'].includes(currentUser?.role || '') && (
+                      <button
+                        onClick={handleGenerateAiReply}
+                        disabled={generateAiMutation.isPending || addCommentMutation.isPending}
+                        className="flex items-center text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors p-2 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-950/50 disabled:opacity-50"
+                      >
+                        {generateAiMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4 mr-2" />
+                        )}
+                        {generateAiMutation.isPending ? 'Drafting...' : 'Draft with AI'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Right Side: Action Buttons */}
                   <div className="flex w-full sm:w-auto gap-3">
                     {['ADMIN', 'MANAGER', 'ENGINEER'].includes(currentUser?.role || '') && (
                       <button
                         onClick={() => handleAddComment(true)}
-                        disabled={addCommentMutation.isPending || !commentContent.trim()}
+                        disabled={addCommentMutation.isPending || !commentContent.trim() || generateAiMutation.isPending}
                         className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 text-sm font-semibold rounded-md hover:bg-amber-200 dark:hover:bg-amber-900/60 focus:outline-none transition-colors border border-amber-200 dark:border-amber-800 disabled:opacity-50"
                       >
                         {addCommentMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lock className="mr-2 h-4 w-4" />}
@@ -292,7 +437,7 @@ export default function TicketDetails() {
                     )}
                     <button
                       onClick={() => handleAddComment(false)}
-                      disabled={addCommentMutation.isPending || !commentContent.trim()}
+                      disabled={addCommentMutation.isPending || !commentContent.trim() || generateAiMutation.isPending}
                       className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-md hover:bg-primary/90 focus:outline-none transition-colors shadow-sm disabled:opacity-50"
                     >
                       {addCommentMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
