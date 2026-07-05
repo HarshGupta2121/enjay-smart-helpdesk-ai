@@ -55,8 +55,8 @@ export class UserService {
   }
 
   async createUser(data: { fullName: string; email: string; password: string; role: string; isActive: boolean }) {
-    const existingUser = await userRepository.findUsers({ search: data.email, page: 1, limit: 1 });
-    if (existingUser.users.find(u => u.email === data.email)) {
+    const existingUser = await userRepository.findUserByEmailIncludingDeleted(data.email);
+    if (existingUser) {
       throw new ConflictError('User with this email already exists');
     }
 

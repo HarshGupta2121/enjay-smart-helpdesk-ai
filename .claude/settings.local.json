@@ -17,7 +17,14 @@
       "Bash(findstr :4000)",
       "Bash(taskkill *)",
       "Bash(npx ts-node *)",
-      "Bash(findstr :5173)"
+      "Bash(findstr :5173)",
+      "Skill(code-review)",
+      "PowerShell(npm run *)",
+      "Bash(curl *)",
+      "PowerShell(grep *)",
+      "PowerShell(node backend/test_api_flow.js)",
+      "PowerShell(node backend/test_triggers.js)",
+      "PowerShell(node backend/cleanup_users.js)"
     ]
   }
 }

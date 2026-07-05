@@ -79,7 +79,7 @@ export class AuthService {
   }
 
   async register(email: string, password: string, fullName: string, ipAddress?: string, userAgent?: string) {
-    const existingUser = await authRepository.findUserByEmail(email);
+    const existingUser = await authRepository.findUserByEmailIncludingDeleted(email);
     if (existingUser) {
       throw new BadRequestError('Email is already registered');
     }

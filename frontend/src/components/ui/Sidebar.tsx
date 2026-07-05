@@ -34,12 +34,12 @@ export default function Sidebar() {
   });
 
   return (
-    <aside className="w-64 flex flex-col border-r border-border bg-card">
-      <div className="h-16 flex items-center px-6 border-b border-border">
-        <h1 className="text-xl font-bold text-primary truncate">Enjay HelpDesk</h1>
+    <aside className="w-64 flex flex-col bg-card shadow-[1px_0_10px_rgba(0,0,0,0.02)] z-20">
+      <div className="h-16 flex items-center px-6">
+        <h1 className="text-xl font-display font-bold text-primary truncate tracking-tight">Enjay HelpDesk</h1>
       </div>
 
-      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
         {filteredNav.map((item) => {
           const isActive = location.pathname.startsWith(item.path);
           const Icon = item.icon;
@@ -47,24 +47,24 @@ export default function Sidebar() {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
+              className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
                 isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  ? 'bg-primary/10 text-primary shadow-sm'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
               }`}
             >
-              <Icon className={`mr-3 h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+              <Icon className={`mr-3 h-5 w-5 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
               {item.name}
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4">
         <button
           onClick={() => logoutMutation.mutate()}
           disabled={logoutMutation.isPending}
-          className="flex w-full items-center px-3 py-2.5 text-sm font-medium text-destructive rounded-md hover:bg-destructive/10 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2 disabled:opacity-50 transition-colors"
+          className="flex w-full items-center px-3 py-2.5 text-sm font-medium text-muted-foreground rounded-xl hover:bg-destructive/10 hover:text-destructive focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2 disabled:opacity-50 transition-colors"
         >
           {logoutMutation.isPending ? (
             <Loader2 className="mr-3 h-5 w-5 animate-spin" />
