@@ -145,7 +145,7 @@ export default function Tickets() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
+              <div className="overflow-x-auto"><Table>
                 <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead className="w-[120px]">Ticket #</TableHead>
@@ -192,7 +192,7 @@ export default function Tickets() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             </div>
           )}
 
