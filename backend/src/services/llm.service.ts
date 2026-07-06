@@ -1,4 +1,5 @@
 import { TicketCategory, TicketPriority } from '@prisma/client';
+import { AppError } from '../utils/errors';
 import { GoogleGenAI } from '@google/genai';
 
 export interface LLMProvider {
@@ -51,7 +52,7 @@ const withRetry = async <T>(fn: () => Promise<T>, options: RetryOptions = {}): P
       if (isRateLimit && fastFailOnRateLimit) {
         const waitTime = extractRetryDelay(errorMessage);
         const seconds = Math.round(waitTime / 1000);
-        throw new Error(`AI API is busy due to Free Tier quotas. Please wait ${seconds} seconds before trying again.`);
+        throw new AppError(`AI API is busy due to Free Tier quotas. Please wait ${seconds} seconds before trying again.`, 503);
       }
 
       if (attempt > maxRetries) {
@@ -69,7 +70,7 @@ const withRetry = async <T>(fn: () => Promise<T>, options: RetryOptions = {}): P
       }
     }
   }
-  throw new Error('Unreachable');
+  throw new AppError('Unreachable', 500);
 };
 
 // ---------------------------------------------------------
@@ -89,7 +90,7 @@ class GeminiProvider implements LLMProvider {
 
   async generateText(prompt: string, fastFail = false): Promise<string> {
     if (!this.ai) {
-      throw new Error('GEMINI_API_KEY is missing. Please configure your environment to use AI features.');
+      throw new AppError('GEMINI_API_KEY is missing. Please configure your environment to use AI features.', 503);
     }
 
     console.log('\n[LLM Provider] Using Provider: GEMINI');
@@ -112,7 +113,7 @@ class GeminiProvider implements LLMProvider {
 
   async generateClassification(title: string, description: string): Promise<any> {
     if (!this.ai) {
-      throw new Error('GEMINI_API_KEY is missing. Cannot classify ticket.');
+      throw new AppError('GEMINI_API_KEY is missing. Cannot classify ticket.', 503);
     }
 
     const prompt = `
@@ -169,10 +170,10 @@ class GeminiProvider implements LLMProvider {
 // ---------------------------------------------------------
 class OpenAIProvider implements LLMProvider {
   async generateText(_prompt: string, _fastFail?: boolean): Promise<string> {
-    throw new Error('OpenAI Provider not fully implemented in this shell');
+    throw new AppError('OpenAI Provider not fully implemented in this shell', 501);
   }
   async generateClassification(_title: string, _description: string): Promise<any> {
-    throw new Error('OpenAI Provider not fully implemented in this shell');
+    throw new AppError('OpenAI Provider not fully implemented in this shell', 501);
   }
 }
 
@@ -181,10 +182,10 @@ class OpenAIProvider implements LLMProvider {
 // ---------------------------------------------------------
 class OllamaProvider implements LLMProvider {
   async generateText(_prompt: string, _fastFail?: boolean): Promise<string> {
-    throw new Error('Ollama Provider not fully implemented in this shell');
+    throw new AppError('Ollama Provider not fully implemented in this shell', 501);
   }
   async generateClassification(_title: string, _description: string): Promise<any> {
-    throw new Error('Ollama Provider not fully implemented in this shell');
+    throw new AppError('Ollama Provider not fully implemented in this shell', 501);
   }
 }
 
