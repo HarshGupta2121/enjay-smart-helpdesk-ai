@@ -1,5 +1,5 @@
 import prisma from '../config/prisma';
-import { Prisma } from '@prisma/client';
+import { Prisma, TicketStatus, TicketPriority } from '@prisma/client';
 import { ConflictError } from '../utils/errors';
 
 export class TicketRepository {
@@ -198,13 +198,15 @@ export class TicketRepository {
 
     const [total, open, pending, resolved, urgent] = await Promise.all([
       prisma.ticket.count({ where: finalWhere }),
-      prisma.ticket.count({ where: { ...finalWhere, status: 'OPEN' } }),
-      prisma.ticket.count({ where: { ...finalWhere, status: 'PENDING' } }),
-      prisma.ticket.count({ where: { ...finalWhere, status: 'RESOLVED' } }),
+      prisma.ticket.count({ where: { AND: [finalWhere, { status: TicketStatus.OPEN }] } }),
+      prisma.ticket.count({ where: { AND: [finalWhere, { status: TicketStatus.PENDING }] } }),
+      prisma.ticket.count({ where: { AND: [finalWhere, { status: TicketStatus.RESOLVED }] } }),
       prisma.ticket.count({
         where: {
-          ...finalWhere,
-          OR: [{ priority: 'URGENT' }, { priority: 'CRITICAL' }]
+          AND: [
+            finalWhere,
+            { OR: [{ priority: TicketPriority.URGENT }, { priority: TicketPriority.CRITICAL }] }
+          ]
         }
       })
     ]);
