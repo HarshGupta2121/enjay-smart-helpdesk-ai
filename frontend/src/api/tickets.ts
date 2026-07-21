@@ -28,6 +28,11 @@ export interface TicketResponse {
   assignee: { fullName: string } | null;
 }
 
+export const fetchDashboardStats = async () => {
+  const response = await api.get('/tickets/stats');
+  return response.data.data;
+};
+
 export const fetchTickets = async (params: FetchTicketsParams) => {
   const response = await api.get('/tickets', { params });
   return response.data.data;

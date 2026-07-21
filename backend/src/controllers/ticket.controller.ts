@@ -91,6 +91,10 @@ export class TicketController {
 
     return sendSuccess(res, StatusCodes.CREATED, 'Comment added successfully', { comment });
   };
+  public getDashboardStats = async (req: Request, res: Response) => {
+    const stats = await ticketService.getDashboardStats(req.user!);
+    return sendSuccess(res, StatusCodes.OK, 'Dashboard stats fetched successfully', stats);
+  };
 }
 
 export default new TicketController();

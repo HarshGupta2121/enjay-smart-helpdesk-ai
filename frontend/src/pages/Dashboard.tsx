@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { useTickets } from '@/hooks/useTickets';
+import { useTickets, useDashboardStats } from '@/hooks/useTickets';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -36,15 +36,14 @@ export default function Dashboard() {
   }, [searchInput]);
 
   const { data, isLoading, isError, refetch } = useTickets(filters);
+  const { data: statsData } = useDashboardStats();
 
-  // Derived dummy stats since we don't have an aggregate endpoint yet
-  // In a real scenario, this would be a separate useQuery call to /api/tickets/stats
-  const stats = {
-    total: data?.tickets?.length || 0,
-    open: data?.tickets?.filter((t: any) => t.status === 'OPEN').length || 0,
-    pending: data?.tickets?.filter((t: any) => t.status === 'PENDING').length || 0,
-    resolved: data?.tickets?.filter((t: any) => t.status === 'RESOLVED').length || 0,
-    urgent: data?.tickets?.filter((t: any) => t.priority === 'URGENT' || t.priority === 'CRITICAL').length || 0,
+  const stats = statsData || {
+    total: 0,
+    open: 0,
+    pending: 0,
+    resolved: 0,
+    urgent: 0,
   };
 
   return (
@@ -245,7 +244,7 @@ export default function Dashboard() {
                 </button>
                 <button
                   className="px-3 py-1 text-sm border rounded-md hover:bg-muted disabled:opacity-50"
-                  disabled={data?.tickets?.length < 20} // Assuming 20 is the default limit
+                  disabled={!data?.meta || filters.page >= data.meta.totalPages}
                   onClick={() => setFilters(prev => ({ ...prev, page: prev.page + 1 }))}
                 >
                   Next

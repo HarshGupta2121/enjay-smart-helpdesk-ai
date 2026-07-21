@@ -33,11 +33,12 @@ export class TicketService {
     } else if (user.role === 'MANAGER') {
       const userTeams = await prisma.teamMember.findMany({ where: { userId: user.userId } });
       const teamIds = userTeams.map(t => t.teamId);
-      enforcedWhere = { 
+      enforcedWhere = {
         OR: [
           { teamId: { in: teamIds } },
+          { assigneeId: user.userId },
           { requesterId: user.userId }
-        ] 
+        ]
       };
     }
     // ADMIN has no enforcedWhere (sees all tickets)
@@ -214,6 +215,32 @@ export class TicketService {
     });
 
     return comment;
+  }
+  async getDashboardStats(user: { userId: string; role: string }) {
+    let enforcedWhere: Prisma.TicketWhereInput | undefined = undefined;
+
+    if (user.role === 'CUSTOMER') {
+      enforcedWhere = { requesterId: user.userId };
+    } else if (user.role === 'ENGINEER') {
+      enforcedWhere = {
+        OR: [
+          { assigneeId: user.userId },
+          { requesterId: user.userId }
+        ]
+      };
+    } else if (user.role === 'MANAGER') {
+      const userTeams = await prisma.teamMember.findMany({ where: { userId: user.userId } });
+      const teamIds = userTeams.map(t => t.teamId);
+      enforcedWhere = {
+        OR: [
+          { teamId: { in: teamIds } },
+          { assigneeId: user.userId },
+          { requesterId: user.userId }
+        ]
+      };
+    }
+
+    return ticketRepository.getDashboardStats(enforcedWhere);
   }
 }
 

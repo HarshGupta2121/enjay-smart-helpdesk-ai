@@ -73,6 +73,19 @@ router.get(
 
 /**
  * @swagger
+ * /api/tickets/stats:
+ *   get:
+ *     summary: Fetch dashboard statistics for tickets
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get(
+  '/stats',
+  asyncHandler(ticketController.getDashboardStats)
+);
+
+/**
+ * @swagger
  * /api/tickets/{id}:
 
  *   get:

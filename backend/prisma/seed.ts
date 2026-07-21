@@ -50,18 +50,37 @@ async function main() {
     data: { email: 'customer2@enjay.com', passwordHash: passCommon, fullName: 'Charlie Customer', avatar: 'https://i.pravatar.cc/150?u=cust2', roleId: roleCustomer.id, isActive: true, isEmailVerified: true }
   });
 
+  console.log('Seeding Teams...');
+  const supportTeam = await prisma.team.create({
+    data: { name: 'Level 1 Support', description: 'General support inquiries' }
+  });
+
+  const itTeam = await prisma.team.create({
+    data: { name: 'IT Infrastructure', description: 'Internal IT requests' }
+  });
+
+  // Assign Manager to both teams
+  await prisma.teamMember.createMany({
+    data: [
+      { teamId: supportTeam.id, userId: manager.id, role: 'MANAGER' },
+      { teamId: itTeam.id, userId: manager.id, role: 'MANAGER' },
+      { teamId: supportTeam.id, userId: eng1.id, role: 'ENGINEER' },
+      { teamId: itTeam.id, userId: eng2.id, role: 'ENGINEER' }
+    ]
+  });
+
   console.log('Seeding Tickets...');
   const ticketsData = [
-    { title: 'Admin system check request', desc: 'Running a routine check on the ticketing engine.', status: TicketStatus.NEW, priority: TicketPriority.LOW, category: TicketCategory.OTHER, requesterId: admin.id, aiSummary: 'Routine administrative system check.', aiConfidence: 99, aiSentiment: 'NEUTRAL' },
-    { title: 'Cannot access billing portal', desc: 'I am getting a 404 when clicking on billing.', status: TicketStatus.NEW, priority: TicketPriority.HIGH, category: TicketCategory.ACCOUNT, requesterId: cust1.id, aiSummary: 'User experiencing 404 error on billing portal.', aiConfidence: 95, aiSentiment: 'ANGRY' },
-    { title: 'Laptop screen flickering', desc: 'My Thinkpad screen keeps flickering after the update.', status: TicketStatus.OPEN, priority: TicketPriority.URGENT, category: TicketCategory.HARDWARE, requesterId: cust2.id, assigneeId: eng1.id, aiSummary: 'Hardware issue: Laptop screen flickering post-update.', aiConfidence: 90, aiSentiment: 'NEUTRAL' },
-    { title: 'VPN connection dropping', desc: 'The VPN drops every 10 minutes.', status: TicketStatus.PENDING, priority: TicketPriority.MEDIUM, category: TicketCategory.NETWORK, requesterId: cust1.id, assigneeId: eng2.id, aiSummary: 'Network issue: Intermittent VPN disconnections.', aiConfidence: 88, aiSentiment: 'FRUSTRATED' },
-    { title: 'Request for Adobe CC', desc: 'Need Adobe CC for a new project.', status: TicketStatus.RESOLVED, priority: TicketPriority.LOW, category: TicketCategory.SOFTWARE, requesterId: cust2.id, assigneeId: eng1.id, aiSummary: 'Software request for Adobe Creative Cloud.', aiConfidence: 99, aiSentiment: 'HAPPY' },
-    { title: 'Emails not syncing on phone', desc: 'My mobile Outlook is not pulling new emails.', status: TicketStatus.CLOSED, priority: TicketPriority.MEDIUM, category: TicketCategory.EMAIL, requesterId: cust1.id, assigneeId: eng2.id, aiSummary: 'Mobile email sync failure on Outlook app.', aiConfidence: 92, aiSentiment: 'NEUTRAL' },
-    { title: 'Security badge lost', desc: 'I lost my office security badge on the train.', status: TicketStatus.NEW, priority: TicketPriority.URGENT, category: TicketCategory.SECURITY, requesterId: cust2.id, aiSummary: 'User lost physical office security badge.', aiConfidence: 98, aiSentiment: 'PANICKED' },
-    { title: 'External monitor not detected', desc: 'My second screen is black.', status: TicketStatus.OPEN, priority: TicketPriority.LOW, category: TicketCategory.HARDWARE, requesterId: cust1.id, assigneeId: eng1.id, aiSummary: 'External monitor connectivity issue.', aiConfidence: 85, aiSentiment: 'NEUTRAL' },
-    { title: 'Need access to GitHub repo', desc: 'Please add me to the frontend-v2 repo.', status: TicketStatus.NEW, priority: TicketPriority.MEDIUM, category: TicketCategory.ACCOUNT, requesterId: cust2.id, aiSummary: 'Access request for GitHub repository.', aiConfidence: 95, aiSentiment: 'HAPPY' },
-    { title: 'Server throwing 500s', desc: 'Production API is returning 500 errors on login.', status: TicketStatus.OPEN, priority: TicketPriority.CRITICAL, category: TicketCategory.SOFTWARE, requesterId: cust1.id, assigneeId: manager.id, aiSummary: 'Critical production outage: 500 errors on API login.', aiConfidence: 99, aiSentiment: 'ANGRY' },
+    { title: 'Admin system check request', desc: 'Running a routine check on the ticketing engine.', status: TicketStatus.NEW, priority: TicketPriority.LOW, category: TicketCategory.OTHER, requesterId: admin.id, teamId: itTeam.id, aiSummary: 'Routine administrative system check.', aiConfidence: 99, aiSentiment: 'NEUTRAL' },
+    { title: 'Cannot access billing portal', desc: 'I am getting a 404 when clicking on billing.', status: TicketStatus.NEW, priority: TicketPriority.HIGH, category: TicketCategory.ACCOUNT, requesterId: cust1.id, teamId: supportTeam.id, aiSummary: 'User experiencing 404 error on billing portal.', aiConfidence: 95, aiSentiment: 'ANGRY' },
+    { title: 'Laptop screen flickering', desc: 'My Thinkpad screen keeps flickering after the update.', status: TicketStatus.OPEN, priority: TicketPriority.URGENT, category: TicketCategory.HARDWARE, requesterId: cust2.id, assigneeId: eng1.id, teamId: itTeam.id, aiSummary: 'Hardware issue: Laptop screen flickering post-update.', aiConfidence: 90, aiSentiment: 'NEUTRAL' },
+    { title: 'VPN connection dropping', desc: 'The VPN drops every 10 minutes.', status: TicketStatus.PENDING, priority: TicketPriority.MEDIUM, category: TicketCategory.NETWORK, requesterId: cust1.id, assigneeId: eng2.id, teamId: itTeam.id, aiSummary: 'Network issue: Intermittent VPN disconnections.', aiConfidence: 88, aiSentiment: 'FRUSTRATED' },
+    { title: 'Request for Adobe CC', desc: 'Need Adobe CC for a new project.', status: TicketStatus.RESOLVED, priority: TicketPriority.LOW, category: TicketCategory.SOFTWARE, requesterId: cust2.id, assigneeId: eng1.id, teamId: supportTeam.id, aiSummary: 'Software request for Adobe Creative Cloud.', aiConfidence: 99, aiSentiment: 'HAPPY' },
+    { title: 'Emails not syncing on phone', desc: 'My mobile Outlook is not pulling new emails.', status: TicketStatus.CLOSED, priority: TicketPriority.MEDIUM, category: TicketCategory.EMAIL, requesterId: cust1.id, assigneeId: eng2.id, teamId: supportTeam.id, aiSummary: 'Mobile email sync failure on Outlook app.', aiConfidence: 92, aiSentiment: 'NEUTRAL' },
+    { title: 'Security badge lost', desc: 'I lost my office security badge on the train.', status: TicketStatus.NEW, priority: TicketPriority.URGENT, category: TicketCategory.SECURITY, requesterId: cust2.id, teamId: supportTeam.id, aiSummary: 'User lost physical office security badge.', aiConfidence: 98, aiSentiment: 'PANICKED' },
+    { title: 'External monitor not detected', desc: 'My second screen is black.', status: TicketStatus.OPEN, priority: TicketPriority.LOW, category: TicketCategory.HARDWARE, requesterId: cust1.id, assigneeId: eng1.id, teamId: itTeam.id, aiSummary: 'External monitor connectivity issue.', aiConfidence: 85, aiSentiment: 'NEUTRAL' },
+    { title: 'Need access to GitHub repo', desc: 'Please add me to the frontend-v2 repo.', status: TicketStatus.NEW, priority: TicketPriority.MEDIUM, category: TicketCategory.ACCOUNT, requesterId: cust2.id, teamId: itTeam.id, aiSummary: 'Access request for GitHub repository.', aiConfidence: 95, aiSentiment: 'HAPPY' },
+    { title: 'Server throwing 500s', desc: 'Production API is returning 500 errors on login.', status: TicketStatus.OPEN, priority: TicketPriority.CRITICAL, category: TicketCategory.SOFTWARE, requesterId: cust1.id, assigneeId: manager.id, teamId: itTeam.id, aiSummary: 'Critical production outage: 500 errors on API login.', aiConfidence: 99, aiSentiment: 'ANGRY' },
   ];
 
   let seq = 1;
@@ -79,6 +98,7 @@ async function main() {
         category: t.category,
         requesterId: t.requesterId,
         assigneeId: t.assigneeId,
+        teamId: t.teamId,
         aiSummary: t.aiSummary,
         aiConfidence: t.aiConfidence,
         aiSentiment: t.aiSentiment,

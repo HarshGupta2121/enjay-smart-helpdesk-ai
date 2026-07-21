@@ -1,6 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchTickets, FetchTicketsParams, fetchTicketTimeline, updateTicketStatus, addTicketComment, createTicket, generateAiReply, fetchSimilarTickets } from '@/api/tickets';
+import { fetchTickets, fetchDashboardStats, FetchTicketsParams, fetchTicketTimeline, updateTicketStatus, addTicketComment, createTicket, generateAiReply, fetchSimilarTickets } from '@/api/tickets';
 import { toast } from 'sonner';
+
+export const useDashboardStats = () => {
+  return useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: () => fetchDashboardStats(),
+  });
+};
 
 export const useTickets = (params: FetchTicketsParams) => {
   return useQuery({

@@ -141,7 +141,7 @@ export class TicketRepository {
           assignee: { select: { id: true, fullName: true, avatar: true } },
         },
       }),
-      prisma.ticket.count({ where: whereClause })
+      prisma.ticket.count({ where: finalWhere })
     ]);
 
     return { 
@@ -189,6 +189,27 @@ export class TicketRepository {
 
     // The Service layer will be responsible for merging and sorting these chronologically.
     return { comments, activities };
+  }
+  async getDashboardStats(enforcedWhere?: Prisma.TicketWhereInput) {
+    const whereClause: Prisma.TicketWhereInput = { deletedAt: null };
+    const finalWhere: Prisma.TicketWhereInput = enforcedWhere
+      ? { AND: [whereClause, enforcedWhere] }
+      : whereClause;
+
+    const [total, open, pending, resolved, urgent] = await Promise.all([
+      prisma.ticket.count({ where: finalWhere }),
+      prisma.ticket.count({ where: { ...finalWhere, status: 'OPEN' } }),
+      prisma.ticket.count({ where: { ...finalWhere, status: 'PENDING' } }),
+      prisma.ticket.count({ where: { ...finalWhere, status: 'RESOLVED' } }),
+      prisma.ticket.count({
+        where: {
+          ...finalWhere,
+          OR: [{ priority: 'URGENT' }, { priority: 'CRITICAL' }]
+        }
+      })
+    ]);
+
+    return { total, open, pending, resolved, urgent };
   }
 }
 
